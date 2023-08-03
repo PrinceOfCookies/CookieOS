@@ -32,7 +32,7 @@ cUtils.slowPrint("Waiting for file to be sent...")
 cUtils.logToOS("[M:05.1] Waiting for file to be sent | " .. cUtils.getTime())
 
 while true do
-    local id, msg, proto = rednet.receive()
+    local id, msg, _ = rednet.receive()
     --print("Message: " .. msg .. " | " .. type(msg))
     local uP_msg = utils.UnPackage(encryptKey, tostring(msg))
 
@@ -63,9 +63,9 @@ while true do
         rednetClose()
         os.reboot()
     else
-        local _, msg2, _ = rednet.receive()
+        local _, _, _ = rednet.receive()
 
-        local file = "Unknown.txt"
+        file = "Unknown.txt"
         f = fs.open(file, "w")
         local _ msg3, _ = rednet.receive()
         f.write("Unknown")

@@ -48,7 +48,7 @@ if #args == 1 then
     if fs.exists(args[1]) then
         fileExists = true
         -- Check if file is a system file
-        if string.find((args[1]), "startup") or string.find(args[1], "sendfile") or string.find(args[1], "key") or string.find(args[1], "receivefile") then
+        if string.find(args[1], "startup") or string.find(args[1], "sendfile") or string.find(args[1], "key") or string.find(args[1], "receivefile") then
             cUtils.tSetTextColor(colors.red)
             cUtils.displayAccessDenied("ABORTING. ATTEMPTED TO SEND A SYSTEM FILE")
             cUtils.logToOS("[M:05.5] Attempted to send a system file (" ..
