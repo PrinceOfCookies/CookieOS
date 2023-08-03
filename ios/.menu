@@ -1,0 +1,88 @@
+os.pullEvent = os.pullEventRaw
+os.loadAPI("apis/cUtils.lua")
+shell.run("cd /")
+
+cUtils.tSetTextColor(colors.white)
+local w, h = cUtils.tGetSize()
+
+local nOption = 1
+
+local function drawMenu()
+    cUtils.tClear()
+    cUtils.tSetCursorPos(1, 1)
+    cUtils.tSetTextColor(colors.yellow)
+    cUtils.tWrite("CookieOS 1.1.0")
+
+    cUtils.tSetTextColor(colors.white)
+    cUtils.tSetCursorPos(w - 11, 1)
+
+    if nOption == 1 then
+        cUtils.tWrite("Command")
+    elseif nOption == 2 then
+        cUtils.tWrite("Programs")
+    elseif nOption == 3 then
+        cUtils.tWrite("Shutdown")
+    elseif nOption == 4 then
+        cUtils.tWrite("Reboot")
+    elseif nOption == 5 then
+        cUtils.tWrite("Uninstall")
+    end
+end
+
+-- GUI
+cUtils.tClear()
+
+local function drawFrontEnd()
+    cUtils.centerPrint(math.floor(h / 2) - 3, "")
+    cUtils.centerPrint(math.floor(h / 2) - 2, "Start Menu")
+    cUtils.centerPrint(math.floor(h / 2) - 1, "")
+    cUtils.centerPrint(math.floor(h / 2) + 0, nOption == 1 and "[ Command   ]" or "Command  ")
+    cUtils.centerPrint(math.floor(h / 2) + 1, nOption == 2 and "[ Programs  ]" or "Programs ")
+    cUtils.centerPrint(math.floor(h / 2) + 2, nOption == 3 and "[ Shutdown  ]" or "Shutdown ")
+    cUtils.centerPrint(math.floor(h / 2) + 3, nOption == 4 and "[ Reboot    ]" or "Reboot   ")
+    cUtils.centerPrint(math.floor(h / 2) + 4, nOption == 5 and "[ Uninstall ]" or "Uninstall")
+end
+
+-- Display
+drawMenu()
+drawFrontEnd()
+
+while true do
+    local _, key = os.pullEvent("key")
+
+    if key == 265 then -- Up arrow
+        if nOption > 1 then
+            nOption = nOption - 1
+            drawMenu()
+            drawFrontEnd()
+        end
+    elseif key == 264 then -- Down arrow
+        if nOption < 5 then
+            nOption = nOption + 1
+            drawMenu()
+            drawFrontEnd()
+        end
+    elseif key == 257 then -- Enter
+        break
+    end
+end
+
+cUtils.tClear()
+
+-- Conditions
+if nOption == 1 then
+    cUtils.logToOS("[M:01] Navigated from " .. shell.getRunningProgram() .. " to ios/security/.cmdCheck at " .. cUtils.getTime())
+    shell.run("ios/security/.cmdCheck")
+elseif nOption == 2 then
+    cUtils.logToOS("[M:01] Navigated from " .. shell.getRunningProgram() .. " to os/.programs at " .. cUtils.getTime())
+    shell.run("os/.programs")
+elseif nOption == 3 then
+    cUtils.logToOS("[M:00] Shutdown at " .. cUtils.getTime())
+    os.shutdown()
+elseif nOption == 4 then
+    cUtils.logToOS("[M:00] Rebooted at " .. cUtils.getTime())
+    os.reboot()
+else
+    cUtils.logToOS("[M:01] Navigated from " .. shell.getRunningProgram() .. " to /uninstall at " .. cUtils.getTime())
+    shell.run("uninstall")
+end

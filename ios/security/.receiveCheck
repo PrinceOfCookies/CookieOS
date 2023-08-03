@@ -1,0 +1,32 @@
+os.loadAPI("apis/cUtils.lua")
+
+cUtils.tClear()
+cUtils.tSetCursorPos(1, 1)
+
+local x, _ = cUtils.tGetSize()
+-- Read the first line of ios/.keys
+local file = fs.open("ios/security/.keys", "r")
+file.readLine() -- First line in file
+local password = file.readLine() -- Second line in file
+
+print("Please enter the password to access cmd prompt")
+print("To return to main menu, type `back`")
+print(string.rep("=", x - 1))
+
+local input = read("*")
+
+if input == password then
+    cUtils.sleep(0.2)
+    cUtils.displayAccessGranted("Access Granted")
+    cUtils.logToOS("[A:A2] Access granted to receive file at " .. cUtils.getTime())
+    cUtils.sleep(0.2)
+    cUtils.tSetTextColor(colors.white)
+    cUtils.logToOS("[M:03] Navigation from " .. shell.getRunningProgram() .. " to ios/programs/s-g-file/.receivefile" .. " at " .. cUtils.getTime())
+    shell.run("ios/programs/s-g-file/.receivefile")
+elseif input == "back" then
+    cUtils.logToOS("[M:03] Navigation from " .. shell.getRunningProgram() .. " to ios/.main" .. " at " .. cUtils.getTime())
+    shell.run("ios/.main")
+else
+    cUtils.logToOS("[A:A1] Attempted to access receive file at " .. cUtils.getTime() .. " | Password: " .. input)
+    cUtils.displayAccessDenied("Access Denied")
+end

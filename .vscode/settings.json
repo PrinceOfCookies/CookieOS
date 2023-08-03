@@ -1,0 +1,12 @@
+{
+    "Lua.diagnostics.globals": [
+        "colors",
+        "fs"
+    ],
+    "Lua.diagnostics.disable": [
+        "undefined-global",
+        "lowercase-global",
+        "redefined-local",
+        "undefined-field"
+    ]
+}

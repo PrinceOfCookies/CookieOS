@@ -1,0 +1,80 @@
+local periphList = peripheral.getNames()
+os.loadAPI("apis/cUtils.lua")
+os.loadAPI("apis/utils.lua")
+
+for i = 1, #periphList do
+    if peripheral.getType(periphList[i]) == "modem" then
+        rednet.open(periphList[i])
+    else
+        cUtils.displayAccessDenied("No modem found")
+    end
+end
+
+local function rednetClose()
+    for i = 1, #periphList do
+        if peripheral.getType(periphList[i]) == "modem" then
+            rednet.close(periphList[i])
+        end
+    end
+end
+
+
+-- Read the first line of ios/.keys
+local file = fs.open("ios/security/.keys", "r")
+local _ = file.readLine()
+local _ = file.readLine()
+local encryptKey = file.readLine()
+local rednetKey = file.readLine()
+
+
+file.close()
+cUtils.slowPrint("Waiting for file to be sent...")
+cUtils.logToOS("[M:05.1] Waiting for file to be sent | " .. cUtils.getTime())
+
+while true do
+    local id, msg, proto = rednet.receive()
+    --print("Message: " .. msg .. " | " .. type(msg))
+    local uP_msg = utils.UnPackage(encryptKey, tostring(msg))
+
+    if uP_msg == rednetKey then
+        local id2, msg2, _ = rednet.receive()
+        --print("Message 2: " .. msg2 .. " | " .. type(msg2))
+
+        -- if string.find(msg2, "startup") or string.find(msg2, "sendfile") or string.find(msg2, "key") or string.find(msg2, "receivefile") then
+        --     cUtils.tClear()
+        --     cUtils.tSetTextColor(colors.red)
+        --     cUtils.displayAccessDenied("ABORTING. ATTEMPTED TO RECEIVE A SYSTEM FILE")
+        --     cUtils.logToOS("[M:05.5] Attempted to receive a system file (" .. msg2 .. ")" .. " from ID: " .. id2 .. " at " .. cUtils.getTime())
+        --     cUtils.tSetTextColor(colors.white)
+        --     cUtils.sleep(2)
+        --     rednetClose()
+        --     os.reboot()
+        -- else 
+        local filee = utils.UnPackage(rednetKey, tostring(msg2))
+
+        f = fs.open(filee, "w")
+        local _, msg3, _ = rednet.receive()
+        --print("Message 3: " .. msg3 .. " | " .. type(msg3))
+        f.write(utils.UnPackage(encryptKey, tostring(msg3)))
+        f.close()
+        print("File: " .. filee .. " received from ID: " .. id2)
+        cUtils.logToOS("[M:05] Received file " .. filee .. " from ID: " .. id2 .. " at " .. cUtils.getTime())
+        cUtils.sleep(1)
+        rednetClose()
+        os.reboot()
+    else
+        local _, msg2, _ = rednet.receive()
+
+        local file = "Unknown.txt"
+        f = fs.open(file, "w")
+        local _ msg3, _ = rednet.receive()
+        f.write("Unknown")
+        f.close()
+        print("File: " .. file .. " received from ID: " .. id)
+        cUtils.logToOS("[M:05] Received file " .. file .. " from ID: " .. id .. " at " .. cUtils.getTime())
+        cUtils.sleep(1)
+        rednetClose()
+        os.reboot()
+    end
+end
+

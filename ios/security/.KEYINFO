@@ -1,0 +1,4 @@
+Line 1 - CMD Prompt password
+Line 2 - Send and Get File password
+Line 3 - Send and Get File Encryption Key -- 16 characters (NO MORE, NO LESS)
+Line 4 - Send and Get File Rednet key -- 16 characters (NO MORE, NO LESS)

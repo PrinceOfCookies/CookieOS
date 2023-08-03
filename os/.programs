@@ -1,0 +1,82 @@
+os.pullEvent = os.pullEventRaw
+os.loadAPI("apis/cUtils.lua")
+
+shell.run("cd /")
+
+local w, h = cUtils.tGetSize()
+
+local nOption = 1
+
+-- Draw Menu Function
+local function drawMenu()
+    cUtils.tClear()
+    cUtils.tSetCursorPos(1, 1)
+    cUtils.tSetTextColor(colors.yellow)
+    cUtils.tWrite("CookieOS 1.0.0")
+
+    cUtils.tSetTextColor(colors.white)
+    cUtils.tSetCursorPos(w - 11, 1)
+
+    if nOption == 1 then
+        cUtils.tWrite("Send File")
+    elseif nOption == 2 then
+        cUtils.tWrite("Receive File")
+    elseif nOption == 3 then
+        cUtils.tWrite("Back")
+    end
+end
+
+-- GUI
+
+cUtils.tClear()
+
+local function drawFrontend()
+    cUtils.centerPrint(math.floor(h / 2) - 3, "", true)
+    cUtils.centerPrint(math.floor(h / 2) - 2, "Programs", false)
+    cUtils.centerPrint(math.floor(h / 2) - 1, "", true)
+    cUtils.centerPrint(math.floor(h / 2) + 0, nOption == 1 and "[ Send File ]" or "Send File", false)
+    cUtils.centerPrint(math.floor(h / 2) + 1, nOption == 2 and "[ Get File  ]" or "Get File", false)
+    cUtils.centerPrint(math.floor(h / 2) + 2, nOption == 3 and "[ Back      ]" or " Back      ", false)
+end
+
+-- Display
+
+drawMenu()
+drawFrontend()
+
+local cw = 1
+
+while true do
+    local _, k = os.pullEvent("key")
+
+    if k == 265 then -- Up arrow
+        if nOption > 1 then
+            nOption = nOption - 1
+            drawMenu()
+            drawFrontend()
+        end
+    elseif k == 264 then -- Down arrow
+        if nOption < 3 then
+            nOption = nOption + 1
+            drawMenu()
+            drawFrontend()
+        end
+    elseif k == 257 then -- Enter
+        if cUtils.tGetTextColor() == cw then
+            break
+        end
+    end
+end
+
+cUtils.tClear()
+
+if nOption == 1 then
+    cUtils.logToOS("[M:01] Navigating from " .. shell.getRunningProgram() .. " to ios/security/.sendCheck at " .. cUtils.getTime())
+    shell.run("ios/security/.sendCheck")
+elseif nOption == 2 then
+    cUtils.logToOS("[M:01] Navigating from " .. shell.getRunningProgram() .. " to ios/security/.receiveCheck at " .. cUtils.getTime())
+    shell.run("ios/security/.receiveCheck")
+elseif nOption == 3 then
+    cUtils.logToOS("[M:01] Navigating from " .. shell.getRunningProgram() .. " to ios/.main at " .. cUtils.getTime())
+    shell.run("ios/.main")
+end
