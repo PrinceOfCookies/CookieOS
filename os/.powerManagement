@@ -1,0 +1,87 @@
+-- This stops the ability to terminate the current program
+if not cosUtils.developmentMode then
+    os.pullEvent = os.pullEventRaw
+end
+
+local w, h = term.getSize()
+local numOp = 1
+
+shell.run("cd /")
+cosUtils.resetScreen(term)
+-- GUI
+cosUtils.resetScreen(term)
+
+local lastrefresh = ""
+
+local invisibleWindow = window.create(term.current(), 1, 1 + 2, w, h, false)
+
+-- Define menu items
+local menuItemsMock = {
+    "",
+    "Power Management",
+    "",
+    numOp == 1 and "[ Shutdown ]" or "Shutdown ",
+    numOp == 2 and "[ Reboot   ]" or "Reboot   ",
+    numOp == 3 and "[ Back     ]" or "Back     "
+}
+
+local function drawFrontEnd(device)
+    invisibleWindow.setVisible(false)
+    invisibleWindow.clear()
+
+    local menuItems = {
+        "",
+        "Power Management",
+        "",
+        numOp == 1 and "[ Shutdown ]" or "Shutdown ",
+        numOp == 2 and "[ Reboot   ]" or "Reboot   ",
+        numOp == 3 and "[ Back     ]" or "Back     "
+    }
+
+    cosUtils.centerPrintTable((h / 2) / 2, w, menuItems, numOp, false, colors.black, true, invisibleWindow)
+    invisibleWindow.setVisible(true)
+
+
+    _, lastrefresh = cosUtils.getTime("12", true)
+    return lastrefresh
+end
+
+local drawMenu = cosUtils.drawMenu
+
+-- Display here
+drawMenu(term)
+drawFrontEnd(term)
+
+-- Thanks shrekshellraiser on discord for help with this
+local timerID = os.startTimer(1)
+while true do
+    local e, key = os.pullEvent()
+    if e == "timer" and key == timerID then
+        local _, minutee = cosUtils.getTime("12", true)
+
+        if lastrefresh ~= minutee then
+            drawMenu(term)
+            drawFrontEnd(term)
+        end
+        timerID = os.startTimer(1)
+    elseif e == "key" then
+        numOp = cosUtils.menuKeyUpDownManagement(key, numOp, drawMenu, drawFrontEnd, #menuItemsMock - 3, 1)
+
+        drawMenu(term)
+        drawFrontEnd(term)
+
+        if key == keys.enter then
+            break -- Do this outside of the `menuKeyUpDownManagement` func due to the break
+        end
+    end
+end
+
+if numOp == 1 then
+    cosUtils.goodByeSetup(term)
+    shell.run("shutdown")
+elseif numOp == 2 then
+    cosUtils.goodByeSetup(term)
+    shell.run("reboot")
+elseif numOp == 3 then
+    shell.run(".menu")
+end

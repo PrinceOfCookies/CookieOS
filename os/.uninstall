@@ -1,0 +1,12 @@
+local termOrMonitor = cosUtils.termOrMonitor
+local del = cosUtils.del
+
+cosUtils.resetScreen(termOrMonitor)
+
+-- del("os", true)
+-- del("ios", true)
+del("startup.lua", false)
+del(".menu", false)
+-- del("back.lua", false)
+-- del("cls.lua", false)
+--del("uninstall.lua", false)

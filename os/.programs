@@ -1,82 +1,117 @@
-os.pullEvent = os.pullEventRaw
-os.loadAPI("apis/cUtils.lua")
-
 shell.run("cd /")
+cosUtils.resetScreen(term)
+local drive = peripheral.find("drive")
+local speaker = peripheral.find("speaker")
 
-local w, h = cUtils.tGetSize()
-
-local nOption = 1
-
--- Draw Menu Function
-local function drawMenu()
-    cUtils.tClear()
-    cUtils.tSetCursorPos(1, 1)
-    cUtils.tSetTextColor(colors.yellow)
-    cUtils.tWrite("CookieOS 1.0.0")
-
-    cUtils.tSetTextColor(colors.white)
-    cUtils.tSetCursorPos(w - 11, 1)
-
-    if nOption == 1 then
-        cUtils.tWrite("Send File")
-    elseif nOption == 2 then
-        cUtils.tWrite("Receive File")
-    elseif nOption == 3 then
-        cUtils.tWrite("Back")
-    end
-end
+local w, h = term.getSize()
+-- Draw Menu
+local numOp = 1
 
 -- GUI
+cosUtils.resetScreen(term)
 
-cUtils.tClear()
+local lastrefresh = ""
 
-local function drawFrontend()
-    cUtils.centerPrint(math.floor(h / 2) - 3, "", true)
-    cUtils.centerPrint(math.floor(h / 2) - 2, "Programs", false)
-    cUtils.centerPrint(math.floor(h / 2) - 1, "", true)
-    cUtils.centerPrint(math.floor(h / 2) + 0, nOption == 1 and "[ Send File ]" or "Send File", false)
-    cUtils.centerPrint(math.floor(h / 2) + 1, nOption == 2 and "[ Get File  ]" or "Get File", false)
-    cUtils.centerPrint(math.floor(h / 2) + 2, nOption == 3 and "[ Back      ]" or " Back      ", false)
+local invisibleWindow = window.create(term.current(), 1, 1 + 2, w, h, false)
+
+local osEditColor = colors.white
+local playMusic = colors.white
+
+if not drive then
+    osEditColor = colors.red
+elseif not drive.isDiskPresent() then
+    osEditColor = colors.red
+elseif fs.list("disk")[1] then
+    osEditColor = colors.red
+elseif drive.getDiskLabel() then
+    osEditColor = colors.red
 end
 
--- Display
+if not speaker then
+    playMusic = colors.red
+end
 
-drawMenu()
-drawFrontend()
+-- Define menu items
+local menuItemsMock = {
+    "",
+    "Programs",
+    "",
+    numOp == 1 and "[ File Explorer ]" or "File Explorer",
+    numOp == 2 and "[ Play Music    ]" or "Play Music   ",
+    numOp == 3 and "[ Back          ]" or "Back         "
+}
 
-local cw = 1
 
+local function drawFrontEnd(device)
+    invisibleWindow.setVisible(false)
+    invisibleWindow.clear()
+
+    local menuItems = {
+        "",
+        "Programs",
+        "",
+        numOp == 1 and "[ File Explorer ]" or "File Explorer",
+        numOp == 2 and "[ Play Music    ]" or "Play Music   ",
+        numOp == 3 and "[ Back          ]" or "Back         "
+    }
+
+    local colorss = {
+        colors.white,
+        colors.white,
+        colors.white,
+        colors.white,
+        playMusic,
+        colors.white
+    }
+
+    cosUtils.centerPrintTable((h / 2) / 2, w, menuItems, numOp, false, colors.black, true, invisibleWindow, colorss)
+    invisibleWindow.setVisible(true)
+
+
+    _, lastrefresh = cosUtils.getTime("12", true)
+    return lastrefresh
+end
+
+local drawMenu = cosUtils.drawMenu
+
+-- Display here
+drawMenu(term)
+drawFrontEnd(term)
+
+-- Thanks shrekshellraiser on discord for help with this
+local timerID = os.startTimer(1)
 while true do
-    local _, k = os.pullEvent("key")
+    local e, key = os.pullEvent()
+    if e == "timer" and key == timerID then
+        local _, minutee = cosUtils.getTime("12", true)
 
-    if k == 265 then -- Up arrow
-        if nOption > 1 then
-            nOption = nOption - 1
-            drawMenu()
-            drawFrontend()
+        if lastrefresh ~= minutee then
+            drawMenu(term)
+            drawFrontEnd(term)
         end
-    elseif k == 264 then -- Down arrow
-        if nOption < 3 then
-            nOption = nOption + 1
-            drawMenu()
-            drawFrontend()
-        end
-    elseif k == 257 then -- Enter
-        if cUtils.tGetTextColor() == cw then
-            break
+        timerID = os.startTimer(1)
+    elseif e == "key" then
+        numOp = cosUtils.menuKeyUpDownManagement(key, numOp, drawMenu, drawFrontEnd, #menuItemsMock - 3, 1)
+
+        drawMenu(term)
+        drawFrontEnd(term)
+
+        if key == keys.enter then
+            break -- Do this outside of the `menuKeyUpDownManagement` func due to the break
         end
     end
 end
 
-cUtils.tClear()
+if numOp == 1 then
+    shell.run("os/programs/fileExplorer")
+elseif numOp == 3 then
+    if playMusic == colors.red then
+        shell.run("os/.programs")
+    end
 
-if nOption == 1 then
-    cUtils.logToOS("[M:01] Navigating from " .. shell.getRunningProgram() .. " to ios/security/.sendCheck at " .. cUtils.getTime())
-    shell.run("ios/security/.sendCheck")
-elseif nOption == 2 then
-    cUtils.logToOS("[M:01] Navigating from " .. shell.getRunningProgram() .. " to ios/security/.receiveCheck at " .. cUtils.getTime())
-    shell.run("ios/security/.receiveCheck")
-elseif nOption == 3 then
-    cUtils.logToOS("[M:01] Navigating from " .. shell.getRunningProgram() .. " to ios/.main at " .. cUtils.getTime())
-    shell.run("ios/.main")
+    shell.run("os/programs/playMusic")
+elseif numOp == 4 then
+    shell.run(".menu")
+else
+    cosUtils.logToOS("Invalid option selected." .. numOp)
 end

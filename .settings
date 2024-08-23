@@ -1,0 +1,6 @@
+{
+  [ "list.show_hidden" ] = false,
+  [ "motd.enable" ] = false,
+  [ "lua.function_source" ] = true,
+  [ "motd.path" ] = "/rom/motd.txt:/motd.txt:/rom/cccbridge_motd.txt:/rom/cccbridge_motd.txt:/rom/cccbridge_motd.txt",
+}

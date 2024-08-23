@@ -1,0 +1,135 @@
+---@diagnostic disable: unused-local
+local ScrW, ScrH = term.getSize()
+local apiBase = "https://ipod-2to6magyna-uc.a.run.app/"
+local nowPlaying = nil
+local topBox = window.create(term.current(), 2, 2, ScrW - 2, 3, false)
+
+local tabs = {
+    "Play",
+    "Search",
+}
+
+local tab = 1
+
+local function drawTabs()
+    for i = 1, 2, 1 do
+        if tab == i then
+            topBox.setTextColor(colors.black)
+            topBox.setBackgroundColor(colors.white)
+        else
+            topBox.setTextColor(colors.white)
+            topBox.setBackgroundColor(colors.gray)
+        end
+
+        topBox.setCursorPos((math.floor((ScrW / 2) * (i - 0.5))) - math.ceil(#tabs[i] / 2) + 1, 2)
+        topBox.write(tabs[i])
+    end
+end
+
+local function drawTopBar()
+    topBox.setBackgroundColor(colors.gray)
+    topBox.setTextColor(colors.white)
+    topBox.clear()
+    drawTabs()
+end
+
+local function draw()
+    term.clear()
+    draw---@diagnostic disable: unused-local
+    local ScrW, ScrH = term.getSize()
+    local apiBase = "https://ipod-2to6magyna-uc.a.run.app/"
+    local nowPlaying = nil
+    local topBox = window.create(term.current(), 2, 2, ScrW - 2, 3, false)
+    
+    local tabs = {
+        "Play",
+        "Search",
+    }
+    
+    local tab = 1
+    
+    local function drawTabs()
+        for i = 1, 2, 1 do
+            if tab == i then
+                topBox.setTextColor(colors.black)
+                topBox.setBackgroundColor(colors.white)
+            else
+                topBox.setTextColor(colors.white)
+                topBox.setBackgroundColor(colors.gray)
+            end
+    
+            topBox.setCursorPos((math.floor((ScrW / 2) * (i - 0.5))) - math.ceil(#tabs[i] / 2) + 1, 2)
+            topBox.write(tabs[i])
+        end
+    end
+    
+    local function drawTopBar()
+        topBox.setBackgroundColor(colors.gray)
+        topBox.setTextColor(colors.white)
+        topBox.clear()
+        drawTabs()
+    end
+    
+    local function draw()
+        term.clear()
+        drawTopBar()
+    end
+    
+    local timerID = os.startTimer(1)
+    while true do
+        local event, key = os.pullEvent()
+    
+        if event == "timer" and key == timerID then
+            topBox.setVisible(false)
+            draw()
+            topBox.setVisible(true)
+            timerID = os.startTimer(1)
+        elseif event == "key" then
+            if key == keys.left then
+                tab = tab > 1 and tab - 1 or 1
+                topBox.setVisible(false)
+                draw()
+                topBox.setVisible(true)
+            elseif key == keys.right then
+                tab = tab < #tabs and tab + 1 or #tabs
+                topBox.setVisible(false)
+                draw()
+                topBox.setVisible(true)
+            elseif key == keys.enter then
+                break
+            end
+        end
+    end
+    
+    if tab == 1 then
+        TopBar()
+end
+
+local timerID = os.startTimer(1)
+while true do
+    local event, key = os.pullEvent()
+
+    if event == "timer" and key == timerID then
+        topBox.setVisible(false)
+        draw()
+        topBox.setVisible(true)
+        timerID = os.startTimer(1)
+    elseif event == "key" then
+        if key == keys.left then
+            tab = tab > 1 and tab - 1 or 1
+            topBox.setVisible(false)
+            draw()
+            topBox.setVisible(true)
+        elseif key == keys.right then
+            tab = tab < #tabs and tab + 1 or #tabs
+            topBox.setVisible(false)
+            draw()
+            topBox.setVisible(true)
+        elseif key == keys.enter then
+            break
+        end
+    end
+end
+
+if tab == 1 then
+    

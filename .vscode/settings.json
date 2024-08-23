@@ -1,12 +1,29 @@
 {
     "Lua.diagnostics.globals": [
+        "term",
         "colors",
-        "fs"
+        "fs",
+        "window",
+        "keys",
+        "shell",
+        "peripheral",
+        "rednet",
+        "rs",
+        "bit",
+        "textutils",
+        "http",
+        "os",
+        "bit32",
+        "settings",
+        "printError",
+        "_HOST",
+        "write",
+        "sleep",
+        "_OSVERSION"
     ],
     "Lua.diagnostics.disable": [
-        "undefined-global",
-        "lowercase-global",
-        "redefined-local",
-        "undefined-field"
+        "cast-local-type",
+        "unused-local",
+        "undefined-field",
     ]
 }

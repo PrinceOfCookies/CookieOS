@@ -1,9 +1,0 @@
-os.loadAPI("apis/cUtils.lua")
-
-cUtils.logToOS("[M:99] Uninstalling CookieOS at " .. cUtils.getTime())
-cUtils.tClear()
-cUtils.tSetCursorPos(1, 1)
-
-cUtils.delete("os", true)
-cUtils.delete("ios", true)
-CUtils.delete("api", true)

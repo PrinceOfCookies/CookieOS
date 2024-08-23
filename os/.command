@@ -1,14 +1,12 @@
-os.pullEvent = os.pullEventRaw
-shell.run("cd /")
-os.loadAPI("apis/cUtils.lua")
+local function cmdPrompt(device)
+	device.setTextColor(colors.white)
+	cosUtils.resetScreen(device)
 
-cUtils.tSetTextColor(colors.white)
-cUtils.tClear()
-cUtils.tSetCursorPos(1, 1)
+	device.write("Welcome to COS CMD Prompt")
+	device.setCursorPos(1, 2)
+	device.write("===================================================")
+	device.setCursorPos(1, 3)
+end
 
-local x, _ = cUtils.tGetSize()
+cmdPrompt(term)
 
-print("Welcome to our cmd prompt")
-print("Type 'chelp' for a list of commands")
-print("To return to main menu, type `back`")
-print(string.rep("=", x - 1))

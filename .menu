@@ -1,0 +1,90 @@
+shell.run("cd /")
+cosUtils.resetScreen(term)
+
+local w, h = term.getSize()
+-- Draw Menu
+local numOp = 1
+
+-- GUI
+cosUtils.resetScreen(term)
+
+local lastrefresh = ""
+
+local invisibleWindow = window.create(term.current(), 1, 1 + 2, w, h - 2, false)
+
+-- Define menu items
+local menuItemsMock = {
+    "",
+    "Start Menu",
+    "",
+    numOp == 1 and "[ Command   ]" or "Command   ",
+    numOp == 2 and "[ Programs  ]" or "Programs  ",
+    numOp == 3 and "[ Power     ]" or "Power     ",
+    numOp == 4 and "[ Uninstall ]" or "Uninstall ",
+    numOp == 5 and "[ Help      ]" or "Help      "
+}
+
+local function drawFrontEnd(device)
+    invisibleWindow.setVisible(false)
+    invisibleWindow.clear()
+
+    local menuItems = {
+        "",
+        "Start Menu",
+        "",
+        numOp == 1 and "[ Command   ]" or "Command   ",
+        numOp == 2 and "[ Programs  ]" or "Programs  ",
+        numOp == 3 and "[ Power     ]" or "Power     ",
+        numOp == 4 and "[ Uninstall ]" or "Uninstall ",
+        numOp == 5 and "[ Help      ]" or "Help      "
+    }
+
+    cosUtils.centerPrintTable((h / 2) / 2, w, menuItems, numOp, false, colors.black, true, invisibleWindow)
+    invisibleWindow.setVisible(true)
+
+
+    _, lastrefresh = cosUtils.getTime("12", true)
+    return lastrefresh
+end
+
+local drawMenu = cosUtils.drawMenu
+
+-- Display here
+drawMenu(term)
+drawFrontEnd(term)
+
+-- Thanks shrekshellraiser on discord for help with this
+local timerID = os.startTimer(0.1)
+while true do
+    local e, key = os.pullEvent()
+    if e == "timer" and key == timerID then
+        local _, minutee = cosUtils.getTime("12", true)
+
+        if lastrefresh ~= minutee then
+            drawMenu(term)
+            drawFrontEnd(term)
+        end
+        timerID = os.startTimer(1)
+    elseif e == "key" then
+        numOp = cosUtils.menuKeyUpDownManagement(key, numOp, #menuItemsMock - 3, 1)
+
+        drawMenu(term)
+        drawFrontEnd(term)
+
+        if key == keys.enter then
+            break -- Do this outside of the `menuKeyUpDownManagement` func due to the break
+        end
+    end
+end
+
+if numOp == 1 then
+    shell.run("os/.command")
+elseif numOp == 2 then
+    shell.run("os/.programs")
+elseif numOp == 3 then
+    shell.run("os/.powerManagement")
+elseif numOp == 4 then
+    shell.run("os/.uninstall")
+elseif numOp == 5 then
+    shell.run(".help")
+end

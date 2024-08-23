@@ -1,19 +1,11 @@
-# NOT UP TO DATE RIGHT NOW
-
 # CookieOS
-- A custom OS for the ComputerCraft mod for Minecraft.
+- A custom "OS" for Computercraft
 
 ## Installation
-- You dont.
-
-## Setup Instruction
-- Read ios/security/.KEYINFO
-- Change your keys in ios/security/.keys
-- The encryption key, and rednet key must be 16 characters long (No more, no less)
-- I'd recommend changing all of the keys...
+- You dont right now
 
 ## Notes
-- This OS is not meant to be used by anyone other than me, but if you want to use it, go ahead.
-- If you modify any system files.. I likely will not help you if you have issues.
-- If you'd like to contribute, feel free to make a pull request.
-- If you find any bugs, please report them in the issues tab.
+- This is not really meant to be used by anyone other than me, but if you want to.. go for it
+- If you modify any system files, and it ends up breaking, I probably wont help you with issues reguardign it
+- If you'd like to contribute, feel free to make a PR
+- If you find any bugs, please repot them in the issues tab
