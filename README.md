@@ -1,3 +1,5 @@
+# NOT UP TO DATE RIGHT NOW
+
 # CookieOS
 - A custom OS for the ComputerCraft mod for Minecraft.
 
