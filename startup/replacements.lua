@@ -193,7 +193,9 @@ shell.setDir = function(newDir, logLastdir)
     if logLastdir then
         writeLastDir(lastDir)
     end
-
+    if newDir == "../" then
+        return shell.run("cd", "../")
+    end
     return originalSetDir(newDir)
 end
 

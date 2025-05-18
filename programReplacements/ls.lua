@@ -44,13 +44,13 @@ if not fs.isDir(sDir) then
             local sItemPath = fs.combine("", sItem)
 
             if fs.isDir(sItemPath) then
-                totalSize = totalSize + utils.getDirectorySize(sItemPath)
+                totalSize = totalSize + cosUtils.getDirectorySize(sItemPath)
             else
                 totalSize = totalSize + fs.getSize(sItemPath)
             end
         end
 
-        print("Total size: " .. utils.formatSize(totalSize))
+        print("Total size: " .. cosUtils.formatSize(totalSize))
     elseif tArgs[1] == "-i" then
         -- Display the attributes of the directory
         local tAttributes = fs.attributes2("")
@@ -78,7 +78,7 @@ if tArgs[2] == "-i" then
 end
 
 if not tArgs[2] then
-    local tFiles, tDirs = utils.getFilesAndDirs(sDir)
+    local tFiles, tDirs = cosUtils.getFilesAndDirs(sDir)
 
     if term.isColour() then
         term.setTextColor(colors.green)

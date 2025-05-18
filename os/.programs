@@ -104,13 +104,13 @@ end
 
 if numOp == 1 then
     shell.run("os/programs/fileExplorer")
-elseif numOp == 3 then
+elseif numOp == 2 then
     if playMusic == colors.red then
         shell.run("os/.programs")
     end
 
     shell.run("os/programs/playMusic")
-elseif numOp == 4 then
+elseif numOp == 3 then
     shell.run(".menu")
 else
     cosUtils.logToOS("Invalid option selected." .. numOp)

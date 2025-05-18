@@ -1235,7 +1235,61 @@ function cosUtils.getSizeOfCosUtils()
     return funcCount
 end
 
+function cosUtils.getDirectorySize(sPath)
+    local totalSize = 0
+    local tList = fs.list(sPath)
 
+    for _, sItem in pairs(tList) do
+        local sItemPath = fs.combine(sPath, sItem)
 
+        if fs.isDir(sItemPath) then
+            totalSize = totalSize + cosUtils.getDirectorySize(sItemPath)
+        else
+            totalSize = totalSize + fs.getSize(sItemPath)
+        end
+    end
+
+    return totalSize
+end
+
+function cosUtils.formatSize(size)
+    size = tonumber(size)
+
+    if size >= 1024 * 1024 then
+        return string.format("%.2f MB", size / (1024 * 1024))
+    elseif size >= 1024 then
+        return string.format("%.2f KB", size / 1024)
+    else
+        return string.format("%d B", size)
+    end
+end
+
+function cosUtils.getFilesAndDirs(sDir)
+    -- Sort into dirs/files, and calculate column count
+    local tAll = fs.list(sDir)
+    local tFiles = {}
+    local tDirs = {}
+    local bShowHidden = settings.get("list.show_hidden")
+
+    for _, sItem in pairs(tAll) do
+        if bShowHidden or string.sub(sItem, 1, 1) ~= "." then
+            local sPath = fs.combine(sDir, sItem)
+
+            if fs.isDir(sPath) then
+                local dirSize = cosUtils.getDirectorySize(sPath)
+                local readOnly = fs.isReadOnly(sPath)
+                local prefix = readOnly and "\xB7" or ""
+                table.insert(tDirs, prefix .. sItem .. prefix .. " (" .. cosUtils.formatSize(dirSize) .. ")")
+            else
+                local fileSize = fs.getSize(sPath)
+                local readOnly = fs.isReadOnly(sPath)
+                local prefix = readOnly and "\xB7" or ""
+                table.insert(tFiles, prefix .. sItem .. prefix .. " (" .. cosUtils.formatSize(fileSize) .. ")")
+            end
+        end
+    end
+
+    return tFiles, tDirs
+end
 
 return cosUtils
