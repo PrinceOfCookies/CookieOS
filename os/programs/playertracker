@@ -1,0 +1,65 @@
+local playerDetector = peripheral.find("playerDetector")
+local chatBox = peripheral.find("chatBox")
+local monitor = peripheral.find("monitor")
+if not playerDetector or not chatBox then return end
+local onlinePlayers = playerDetector.getOnlinePlayers()
+-- Go through the players, get the coords, send them to chat
+-- Every 5 seconds, run this
+--[[
+for _, player in ipairs(onlinePlayers) do
+    local coords = playerDetector.getPlayerPos(player)
+    if coords then
+        local message = string.format("Player %s is at coordinates: %d, %d, %d", player, coords.x, coords.y, coords.z)
+        -- Wait 300ms between sending each message
+        -- os.sleep(0.3)
+        -- chatBox.sendMessage(message)
+    else
+        chatBox.sendMessage(string.format("Could not retrieve coordinates for player %s", player))
+    end
+end
+--]]
+local x, y = monitor.getSize()
+local function sendPlayerCoords()
+    monitor.clear()
+    monitor.setCursorPos(x / 2, 1)
+    monitor.write("Overworld")
+    local playercount = #playerDetector.getOnlinePlayers()
+    monitor.setCursorPos(x / 2, playercount + 4)
+    monitor.write("Nether")
+    local ypos = 3
+    local netherY = playercount + 5
+    for _, player in ipairs(playerDetector.getOnlinePlayers()) do
+        local coords = playerDetector.getPlayerPos(player)
+        local dim = coords.dimension
+        local health = coords.health
+        if coords then
+            local message = string.format("Player %s(%d) is at coordinates: %d, %d, %d", player, health, coords.x, coords.y, coords.z)
+            print(message)
+            if monitor then
+                -- Split this into two columns, one for overworld, one for nether
+                if dim == "minecraft:overworld" then
+                    monitor.setCursorPos(1, ypos)
+                    monitor.write(message)
+                    ypos = ypos + 1
+                elseif dim == "minecraft:the_nether" then
+                    monitor.setCursorPos(1, netherY)
+                    monitor.write(message)
+                    netherY = netherY + 1
+                end
+            end
+        else
+            chatBox.sendMessage(string.format("Could not retrieve coordinates for player %s", player))
+        end
+    end
+end
+
+local function mainLoop()
+    monitor.setTextScale(0.5)
+    while true do
+        sendPlayerCoords()
+        os.sleep(5) -- Wait 5 seconds before sending again
+    end
+end
+
+-- Start the main loop
+mainLoop()

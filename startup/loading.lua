@@ -7,7 +7,7 @@ if not developmentMode then
     os.pullEvent = os.pullEventRaw
 end
 
-local monitor = cosUtils.isMonitorHere()
+local monitor = false -- cosUtils.isMonitorHere()
 
 local function loadingText(device)
     local slowPrint = monitor and cosUtils.monSlowPrint or textutils.slowPrint

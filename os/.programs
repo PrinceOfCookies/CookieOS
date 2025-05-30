@@ -2,6 +2,9 @@ shell.run("cd /")
 cosUtils.resetScreen(term)
 local drive = peripheral.find("drive")
 local speaker = peripheral.find("speaker")
+local chat = peripheral.find("chatBox")
+local monitor = peripheral.find("monitor")
+local playerTracker = peripheral.find("playerDetector")
 
 local w, h = term.getSize()
 -- Draw Menu
@@ -16,6 +19,8 @@ local invisibleWindow = window.create(term.current(), 1, 1 + 2, w, h, false)
 
 local osEditColor = colors.white
 local playMusic = colors.white
+local chatColor = colors.white
+local trackerColor = colors.white
 
 if not drive then
     osEditColor = colors.red
@@ -31,6 +36,14 @@ if not speaker then
     playMusic = colors.red
 end
 
+if not chat then
+    chatColor = colors.red
+end
+
+if not chat or not monitor or not playerTracker then
+    trackerColor = colors.red
+end
+
 -- Define menu items
 local menuItemsMock = {
     "",
@@ -38,7 +51,9 @@ local menuItemsMock = {
     "",
     numOp == 1 and "[ File Explorer ]" or "File Explorer",
     numOp == 2 and "[ Play Music    ]" or "Play Music   ",
-    numOp == 3 and "[ Back          ]" or "Back         "
+    numOp == 3 and "[ Chat          ]" or "Chat         ",
+    numOp == 4 and "[ Player Tracker]" or "Player Tracker",
+    numOp == 5 and "[ Back          ]" or "Back         "
 }
 
 
@@ -50,9 +65,11 @@ local function drawFrontEnd(device)
         "",
         "Programs",
         "",
-        numOp == 1 and "[ File Explorer ]" or "File Explorer",
-        numOp == 2 and "[ Play Music    ]" or "Play Music   ",
-        numOp == 3 and "[ Back          ]" or "Back         "
+    numOp == 1 and "[ File Explorer ]" or "File Explorer",
+    numOp == 2 and "[ Play Music    ]" or "Play Music   ",
+    numOp == 3 and "[ Chat          ]" or "Chat         ",
+    numOp == 4 and "[ Player Tracker]" or " Player Tracker",
+    numOp == 5 and "[ Back          ]" or "Back         "
     }
 
     local colorss = {
@@ -61,6 +78,8 @@ local function drawFrontEnd(device)
         colors.white,
         colors.white,
         playMusic,
+        chatColor,
+        trackerColor,
         colors.white
     }
 
@@ -111,6 +130,18 @@ elseif numOp == 2 then
 
     shell.run("os/programs/playMusic")
 elseif numOp == 3 then
+    if chatColor == colors.red then
+        shell.run("os/.programs")
+    end
+
+    shell.run("os/programs/chat")
+elseif numOp == 4 then
+    if trackerColor == colors.red then
+        shell.run("os/.programs")
+    end
+
+    shell.run("os/programs/playertracker")
+elseif numOp == 5 then
     shell.run(".menu")
 else
     cosUtils.logToOS("Invalid option selected." .. numOp)
