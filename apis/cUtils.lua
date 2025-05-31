@@ -1292,4 +1292,122 @@ function cosUtils.getFilesAndDirs(sDir)
     return tFiles, tDirs
 end
 
+function cosUtils.Gemini(query)
+    local geminiApiKey = "YOUR_GEMINI_API_KEY" -- Replace with your actual Gemini API key
+    if geminiApiKey == "YOUR_GEMINI_API_KEY" then
+        printError("ERROR: Please replace 'YOUR_GEMINI_API_KEY' with your actual Gemini API key.")
+        return nil, "Gemini API key not configured"
+    end
+
+    local modelName = "gemini-1.5-flash-latest" -- Or "gemini-pro"
+    local apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/" .. modelName .. ":generateContent?key=" .. geminiApiKey
+
+    if not query or query == "" then
+        return nil, "Query is empty"
+    end
+
+    local headers = {
+        ["Content-Type"] = "application/json"
+    }
+
+    local system_instruction_text = "You're someone playing on a modded minecraft server, and you're an expert with create, computercraft, mekanism, powah, mystical agriculture and much more. Youre also knowladgable about programmng, and things outside minecraft. Please be concise in your responses."
+
+    local body = {
+        -- Using systemInstruction for cleaner separation
+        systemInstruction = {
+            parts = {
+                { text = system_instruction_text }
+            }
+        },
+        contents = {
+            {
+                role = "user",
+                parts = {
+                    { text = query }
+                }
+            }
+        },
+        generationConfig = {
+            maxOutputTokens = 250,
+            temperature = 0.7, -- Optional: Adjust for creativity (0.0 to 1.0)
+            -- topP = 0.9,      -- Optional: Nucleus sampling
+            -- topK = 40        -- Optional: Top-K sampling
+        },
+    }
+
+    local jsonBody, jsonErr = textutils.serializeJSON(body)
+    if not jsonBody then
+        return nil, "Failed to serialize JSON body: " .. (jsonErr or "unknown error")
+    end
+
+
+    local response, err = http.post(apiUrl, jsonBody, headers)
+    if not response then
+        return nil, "HTTP request failed: " .. (err or "unknown error")
+    end
+
+    local responseBody = response.readAll()
+    response.close()
+
+    local responseData, deserErr = textutils.unserializeJSON(responseBody)
+    if not responseData then
+        return nil, "Failed to unserialize JSON response from Gemini API: " .. (deserErr or "unknown error") .. ". Raw: " .. responseBody
+    end
+
+    -- Check for Gemini API specific errors
+    if responseData.error then
+        local errorMsg = "Gemini API error: " .. (responseData.error.message or "Unknown error")
+        if responseData.error.details then
+            errorMsg = errorMsg .. " Details: " .. textutils.serializeJSON(responseData.error.details)
+        end
+        return nil, errorMsg
+    end
+
+    -- Check for content and correct structure
+    -- A response might lack candidates if it was blocked for safety or other reasons.
+    if not responseData.candidates or not responseData.candidates[1] then
+        local blockReason = "Unknown reason"
+        if responseData.promptFeedback and responseData.promptFeedback.blockReason then
+            blockReason = "Prompt blocked: " .. responseData.promptFeedback.blockReason
+        elseif responseData.candidates and responseData.candidates[1] and responseData.candidates[1].finishReason and responseData.candidates[1].finishReason ~= "STOP" then
+            blockReason = "Candidate finishReason: " .. responseData.candidates[1].finishReason
+             if responseData.candidates[1].safetyRatings then
+                blockReason = blockReason .. " SafetyRatings: "
+                for _, rating in ipairs(responseData.candidates[1].safetyRatings) do
+                    blockReason = blockReason .. rating.category .. "=" .. rating.probability .. "; "
+                end
+            end
+        end
+        return nil, "No candidates found in Gemini response. " .. blockReason .. ". Raw: " .. responseBody
+    end
+
+    if not responseData.candidates[1].content or
+       not responseData.candidates[1].content.parts or
+       not responseData.candidates[1].content.parts[1] or
+       not responseData.candidates[1].content.parts[1].text then
+        return nil, "Invalid response structure from Gemini API (missing content text). Raw: " .. responseBody
+    end
+
+    local content = responseData.candidates[1].content.parts[1].text
+
+    if not content or content == "" then
+        -- This might happen if the model genuinely returns an empty string, or if finishReason was not STOP.
+        local finishReason = responseData.candidates[1].finishReason or "UNKNOWN"
+        if finishReason ~= "STOP" then
+             return nil, "Empty response content and finishReason was " .. finishReason .. ". Raw: " .. responseBody
+        end
+        return nil, "Empty response content from Gemini. Raw: " .. responseBody
+    end
+
+    -- Trim leading/trailing whitespace
+    content = content:match("^%s*(.-)%s*$")
+
+    -- Enforce character limit (same as original code)
+    if #content > 600 then
+        content = content:sub(1, 600) .. "..."
+    end
+
+    return content
+end
+
 return cosUtils

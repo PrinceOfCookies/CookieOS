@@ -1,6 +1,6 @@
 package.path = package.path .. ";/apis/?.lua;/apis/?/init.lua"
 _G.cosUtils = require("cUtils")
-_G.cosv = "CookieOS v2.2.1"
+_G.cosv = "CookieOS v2.2.2"
 _G.developmentMode = true
 
 if not developmentMode then

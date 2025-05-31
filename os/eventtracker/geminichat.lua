@@ -1,0 +1,101 @@
+-- !TODO MAKE THIS RUN IN COROUTINE SO THAT OTHER EVENTS CAN BE HANDLED
+
+local chat = peripheral.find("chatBox")
+if not chat then
+    if term and term.setTextColor then
+        local oldColor = term.getTextColor()
+        term.setTextColor(colors.red)
+        print("Chat peripheral not found. Please ensure it is connected and try again.")
+        term.setTextColor(oldColor)
+    else
+        print("ERROR: Chat peripheral not found. Please ensure it is connected and try again.")
+    end
+    return
+end
+
+local players = {}
+local function printError(msg)
+    if term and term.setTextColor then
+        local oldColor = term.getTextColor()
+        term.setTextColor(colors.red)
+        print(msg)
+        term.setTextColor(oldColor)
+    else
+        print("ERROR: " .. msg)
+    end
+end
+
+local function sendChatMessage(message)
+    if type(message) ~= "string" or message == "" then
+        printError("Invalid message to send. Please provide a non-empty string.")
+        return
+    end
+
+    chat.sendMessage(message, "Davey", "<>")
+end
+
+local function receiveChatMessage()
+    local event, sender, message
+    print("Chat monitor started. Listening for messages...")
+    print("Type '.,<your query>' to ask Davey (using Gemini).")
+    while true do
+        event, sender, message = os.pullEvent("chat")
+        if event == "chat" and sender and message then
+            print("[" .. sender .. "]: " .. message)
+            if not players[sender] then
+                players[sender] = {}
+                print("New player detected: " .. sender)
+            end
+
+            table.insert(players[sender], {
+                time = os.clock(),
+                message = message
+            })
+
+            table.sort(players[sender], function(a, b) return a.time > b.time end)
+            if string.sub(message, 1, 2) == ".," then
+                local query = string.sub(message, 3)
+                if query and query:match("%S") then
+                    query = query:match("^%s*(.-)%s*$")
+                    print("Sending query to Gemini: '" .. query .. "'")
+                    local response, err = cosUtils.Gemini(query)
+                    if response then
+                        print("Gemini response: " .. response)
+                        sendChatMessage(response)
+                        players["gem"] = players["gem"] or {}
+                        table.insert(players["gem"], {
+                            time = os.clock(),
+                            message = response
+                        })
+
+                        local tableSize = textutils.serialize(players):len()
+                        print("Players table size: " .. tableSize .. " bytes")
+                    else
+                        local errorMsg = err or "No response or unknown error from Gemini."
+                        printError("Error processing Gemini query: " .. errorMsg)
+                    end
+                else
+                    printError("Error: Empty query after prefix.")
+                end
+            elseif message == "!tblsize" then
+                local tableSize = textutils.serialize(players):len()
+                sendChatMessage("Players table size: " .. tableSize .. " bytes")
+                local sizes = {}
+                for player, messages in pairs(players) do
+                    sizes[player] = textutils.serialize(messages):len()
+                end
+
+                for player, size in pairs(sizes) do
+                    sendChatMessage(player .. " table size: " .. size .. " bytes")
+                end
+            end
+        end
+    end
+end
+
+if not cosUtils or not cosUtils.Gemini then
+    printError("CRITICAL: cosUtils.Gemini function is not defined!")
+    printError("Please ensure the Gemini API function is included in this script or required correctly.")
+else
+    receiveChatMessage()
+end
