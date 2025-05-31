@@ -1,68 +1,23 @@
 local chatB = peripheral.find("chatBox")
-
 local function sendMessage(msg)
-    -- local splitMessage = string.split(msg, " ")
-    -- if #splitMessage < 1 then return end
-
     print("Sending message: " .. msg)
-    chatB.sendMessage(msg, "Dave", "<>", "cyan")
+    chatB.sendMessage(msg, "Dave", "<>")
 end
 
 if not chatB then
     print("No chat peripheral found.")
     print("Please connect a chat peripheral to use this program.")
     print("Exiting...")
-    os.exit()
+    return
 end
 
 term.clear()
 term.setCursorPos(1, 1)
 print("Chat peripheral found. Starting chat program...")
-
 while true do
     local input = read()
     if input and input:match("%S") then
-        sendMessage(input)
+        cosUtils.safeRun(function() sendMessage(input) end, function(err) print("Error sending message: " .. err) end)
         os.sleep(1)
     end
 end
-
--- local chatBox = peripheral.find("chatBox")
-
-
--- local title = {
---     { text = "Goodbye", color = "dark_purple"}
--- }
-
--- local message = {
---     { text = "I will "},
---     { text = "kill ", color = "red"},
---     { text = "you"}
--- }
-
--- local titleJson = textutils.serializeJSON(title)
--- local messageJson = textutils.serialiseJSON(message)
-
--- successful, error = chatBox.sendFormattedToastToPlayer(messageJson, titleJson, "Lythium", "&4&lDavei", "()", "&c&l")
-
--- local chatBox = peripheral.find("chatBox")
-
--- local message = {
---     {text = "Click "}, 
---     {
---         text = "here",
---         underlined = true,
---         color = "aqua",
---         clickEvent = {
---             action = "open_url",
---             value = "https://advancedperipherals.madefor.cc/"
---         }
---     },
---     {text = " for the AP "},
---     {text = "documentation", color = "red"},
---     {text = "!"}
--- }
-
--- local json = textutils.serialiseJSON(message)
-
--- chatBox.sendFormattedMessage(json)

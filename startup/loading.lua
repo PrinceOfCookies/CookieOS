@@ -1,6 +1,6 @@
 package.path = package.path .. ";/apis/?.lua;/apis/?/init.lua"
 _G.cosUtils = require("cUtils")
-_G.cosv = "CookieOS v2.2.2"
+_G.cosv = "CookieOS v2.2.3"
 _G.developmentMode = true
 
 if not developmentMode then
@@ -51,6 +51,7 @@ local function loadingText(device)
     device.setBackgroundColor(colors.black)
     device.clear()
     shell.run("startup/replacements.lua")
+    shell.run("startup/startEvents.lua")
     shell.run(".menu")
 end
 

@@ -3,10 +3,13 @@ local del = cosUtils.del
 
 cosUtils.resetScreen(termOrMonitor)
 
--- del("os", true)
--- del("ios", true)
-del("startup.lua", false)
+del("os", true)
+del("apis", true)
+del("programReplacements", true)
+del("startup", true)
 del(".menu", false)
--- del("back.lua", false)
--- del("cls.lua", false)
---del("uninstall.lua", false)
+del(".settings", false)
+del("back", false)
+
+os.sleep(1.5)
+shell.run("reboot")

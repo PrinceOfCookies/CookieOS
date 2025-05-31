@@ -1,5 +1,4 @@
 -- !TODO MAKE THIS RUN IN COROUTINE SO THAT OTHER EVENTS CAN BE HANDLED
-
 local chat = peripheral.find("chatBox")
 if not chat then
     if term and term.setTextColor then
@@ -25,6 +24,11 @@ local function printError(msg)
     end
 end
 
+if not cosUtils or not cosUtils.Gemini then
+    printError("CRITICAL: cosUtils.Gemini function is not defined!")
+    printError("Please ensure the Gemini API function is included in this script or required correctly.")
+end
+
 local function sendChatMessage(message)
     if type(message) ~= "string" or message == "" then
         printError("Invalid message to send. Please provide a non-empty string.")
@@ -32,6 +36,20 @@ local function sendChatMessage(message)
     end
 
     chat.sendMessage(message, "Davey", "<>")
+end
+
+local function getHistory()
+    local history_lines = {} -- This will be the final flat list of formatted messages
+    for playerName, playerMessageList in pairs(players) do
+        local num_messages_to_take = math.min(10, #playerMessageList)
+        local displayName = playerName
+        if playerName == "gem" then displayName = "Davey" end
+        for i = num_messages_to_take, 1, -1 do
+            local message_object = playerMessageList[i]
+            table.insert(history_lines, displayName .. ": " .. message_object.message)
+        end
+    end
+    return history_lines
 end
 
 local function receiveChatMessage()
@@ -58,7 +76,7 @@ local function receiveChatMessage()
                 if query and query:match("%S") then
                     query = query:match("^%s*(.-)%s*$")
                     print("Sending query to Gemini: '" .. query .. "'")
-                    local response, err = cosUtils.Gemini(query)
+                    local response, err = cosUtils.Gemini(query, getHistory())
                     if response then
                         print("Gemini response: " .. response)
                         sendChatMessage(response)
@@ -87,15 +105,15 @@ local function receiveChatMessage()
 
                 for player, size in pairs(sizes) do
                     sendChatMessage(player .. " table size: " .. size .. " bytes")
+                    os.sleep(0.2)
                 end
+
+                sendChatMessage("Gemini table size: " .. textutils.serialize(players["gem"] or {}):len() .. " bytes")
             end
         end
+
+        os.sleep(0.1)
     end
 end
 
-if not cosUtils or not cosUtils.Gemini then
-    printError("CRITICAL: cosUtils.Gemini function is not defined!")
-    printError("Please ensure the Gemini API function is included in this script or required correctly.")
-else
-    receiveChatMessage()
-end
+receiveChatMessage()

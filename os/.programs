@@ -17,7 +17,6 @@ local lastrefresh = ""
 
 local invisibleWindow = window.create(term.current(), 1, 1 + 2, w, h, false)
 
-local osEditColor = colors.white
 local playMusic = colors.white
 local chatColor = colors.white
 local trackerColor = colors.white
@@ -110,7 +109,7 @@ while true do
         end
         timerID = os.startTimer(1)
     elseif e == "key" then
-        numOp = cosUtils.menuKeyUpDownManagement(key, numOp, drawMenu, drawFrontEnd, #menuItemsMock - 3, 1)
+        numOp = cosUtils.menuKeyUpDownManagement(key, numOp, drawMenu, drawFrontEnd, #menuItemsMock - 5, 1)
 
         drawMenu(term)
         drawFrontEnd(term)
