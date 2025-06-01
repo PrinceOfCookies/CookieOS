@@ -79,7 +79,10 @@ local function receiveChatMessage()
                     local response, err = cosUtils.Gemini(query, getHistory())
                     if response then
                         print("Gemini response: " .. response)
+                        cosUtils.logToOS(playerName .. " asked: " .. query)
                         sendChatMessage(response)
+                        cosUtils.logToOS("Gemini response: " .. response)
+
                         players["gem"] = players["gem"] or {}
                         table.insert(players["gem"], {
                             time = os.clock(),
