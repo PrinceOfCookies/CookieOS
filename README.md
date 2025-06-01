@@ -2,7 +2,7 @@
 - A custom "OS" for Computercraft
 
 ## Installation
-- You dont right now
+- Run the install file in the releases tab.. probably
 
 ## Notes
 - This is not really meant to be used by anyone other than me, but if you want to.. go for it
