@@ -590,6 +590,12 @@ function cosUtils.menuKeyUpDownManagement(key, num, max, min)
 end
 
 function cosUtils.del(name, dir)
+    -- Prevent deletion of .install file in os/
+    if name == "os/.install" or fs.combine(dir or "", name) == "os/.install" then
+        print("Error: Cannot delete the .install file in os/")
+        return
+    end
+
     if not dir then
         -- get the size of the file
         local size = fs.getSize(name)
@@ -597,8 +603,7 @@ function cosUtils.del(name, dir)
         textutils.slowPrint("Removing file: " .. name .. "...")
         os.sleep(timeTodelete)
         shell.run("delete", tostring(name))
-        print("File: %n, deleted", name)
-
+        print(string.format("File: %s, deleted", name))
         return
     end
 
@@ -608,8 +613,9 @@ function cosUtils.del(name, dir)
     local timeTodelete = size / 1000
     os.sleep(timeTodelete)
     shell.run("delete", tostring(name))
-    print("Directory: %n, deleted", name)
+    print(string.format("Directory: %s, deleted", name))
 end
+
 
 function cosUtils.drawBox(win, x, y, width, height, fgColor, bgColor)
     fgColor = fgColor or colors.white

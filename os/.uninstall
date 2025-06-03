@@ -1,7 +1,6 @@
-local termOrMonitor = cosUtils.termOrMonitor
 local del = cosUtils.del
 
-cosUtils.resetScreen(termOrMonitor)
+cosUtils.resetScreen(term)
 
 del("os", true)
 del("apis", true)
