@@ -8,7 +8,7 @@ del("programReplacements", true)
 del("startup", true)
 del(".menu", false)
 del(".settings", false)
-del("back", false)
+del("back.lua", false)
 
 os.sleep(1.5)
 shell.run("reboot")

@@ -591,8 +591,9 @@ end
 
 function cosUtils.del(name, dir)
     -- Prevent deletion of .install file in os/
-    shell.run("move", "os/.install", "/")
-    shell.run("rename", ".install", "install")
+    if not fs.exists(".install") then
+        shell.run("move", "os/.install", "/")
+    end
 
     if not dir then
         -- get the size of the file

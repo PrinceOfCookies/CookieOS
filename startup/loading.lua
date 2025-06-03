@@ -1,18 +1,18 @@
 package.path = package.path .. ";/apis/?.lua;/apis/?/init.lua"
 _G.cosUtils = require("cUtils")
-_G.cosv = "CookieOS v2.2.4"
+_G.cosv = "CookieOS v2.2.5"
 _G.developmentMode = true
 
 if not developmentMode then
     os.pullEvent = os.pullEventRaw
 end
 
-if fs.exists(".install") then
-    fs.delete(".install")
-end
-
 if fs.exists("json") then
     fs.delete("json")
+    fs.delete(".install")
+    fs.delete("README.md")
+    fs.delete(".gitignore")
+    fs.delete(".vscode")
 end
 
 local monitor = false -- cosUtils.isMonitorHere()
