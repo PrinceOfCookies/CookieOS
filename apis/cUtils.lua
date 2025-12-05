@@ -558,20 +558,13 @@ end
 function cosUtils.isMonitorHere()
     local monitor = peripheral.find("monitor")
 
-    if monitor then
-        return monitor
-    else
-        return nil
-    end
+    return monitor or nil
 end
 
 function cosUtils.monSlowPrint(txt, delay)
     local monitor = cosUtils.isMonitorHere()
     if not monitor then return assert("Monitor not found") end
-
-    if not delay then
-        delay = 0.3
-    end
+    delay = delay or 0.3
 
     for i = 1, #txt do
         monitor.write(txt:sub(i, i))
@@ -595,12 +588,12 @@ function cosUtils.del(name, dir)
         shell.run("move", "os/.install", "/")
     end
 
+    local size = fs.getSize(name)
+    local timeToDelete = size / 1000
+
     if not dir then
-        -- get the size of the file
-        local size = fs.getSize(name)
-        local timeTodelete = size / 1000
         textutils.slowPrint("Removing file: " .. name .. "...")
-        os.sleep(timeTodelete)
+        os.sleep(timeToDelete)
         shell.run("delete", tostring(name))
         print(string.format("File: %s, deleted", name))
         return
@@ -608,9 +601,7 @@ function cosUtils.del(name, dir)
 
     textutils.slowPrint("Removing Directory: " .. name .. "...")
     -- Size of the directory
-    local size = fs.getSize(name)
-    local timeTodelete = size / 1000
-    os.sleep(timeTodelete)
+    os.sleep(timeToDelete)
     shell.run("delete", tostring(name))
     print(string.format("Directory: %s, deleted", name))
 end
@@ -746,8 +737,6 @@ function cosUtils.centerPrint(yPos, w, text, col, win)
     local xPos = math.floor((w - string.len(text)) / 2)
     win.setBackgroundColor(col)
     win.setCursorPos(xPos, yPos)
-    --term.setBackgroundColor(col)
-    --term.clearLine()
     win.write(text)
 end
 
@@ -863,6 +852,7 @@ end
 function cosUtils.error(device, er)
     local _, curY = device.getCursorPos()
     device.setCursorPos(1, curY + 1)
+    cosUtils.logToOS(er)
     error(er, 1)
 end
 
@@ -882,7 +872,6 @@ function cosUtils.findFile(filename, directory)
         elseif item == filename then
             return "/" .. fs.combine("", filename)
         end
-        -- If the item matches the filename, return the full path
     end
 end
 
@@ -892,7 +881,7 @@ function cosUtils.loadingBar(device, y, col)
     local x = math.floor((w - length) / 2) -- Center the bar on the screen
     y = y - 1
     local fileCount = cosUtils.fileCount("")
-    local totalTime = fileCount * 0.075
+    local totalTime = fileCount * 0.070
     local timePerChar = totalTime / length
     cosUtils.drawBox(device, x, y, length, 1) -- Draw the box around the bar
     device.setBackgroundColor(col)
@@ -1024,7 +1013,7 @@ function cosUtils.isModemHere()
     local modem = peripheral.find("modem")
     if modem == nil or not modem then return false end
 
-    for k, v in pairs(modem) do
+    for k, _ in pairs(modem) do
         if k == "transmit" then return true, modem end
     end
 end
@@ -1210,7 +1199,7 @@ end
 
 function cosUtils.getSizeOfCosUtils()
     funcCount = 0
-    for k, v in pairs(cosUtils) do
+    for _, v in pairs(cosUtils) do
         if type(v) == "function" then
             funcCount = funcCount + 1
         end
@@ -1258,16 +1247,14 @@ function cosUtils.getFilesAndDirs(sDir)
     for _, sItem in pairs(tAll) do
         if bShowHidden or string.sub(sItem, 1, 1) ~= "." then
             local sPath = fs.combine(sDir, sItem)
+            local readOnly = fs.isReadOnly(sPath)
+            local prefix = readOnly and "\xB7" or ""
 
             if fs.isDir(sPath) then
                 local dirSize = cosUtils.getDirectorySize(sPath)
-                local readOnly = fs.isReadOnly(sPath)
-                local prefix = readOnly and "\xB7" or ""
                 table.insert(tDirs, prefix .. sItem .. prefix .. " (" .. cosUtils.formatSize(dirSize) .. ")")
             else
                 local fileSize = fs.getSize(sPath)
-                local readOnly = fs.isReadOnly(sPath)
-                local prefix = readOnly and "\xB7" or ""
                 table.insert(tFiles, prefix .. sItem .. prefix .. " (" .. cosUtils.formatSize(fileSize) .. ")")
             end
         end
@@ -1276,8 +1263,9 @@ function cosUtils.getFilesAndDirs(sDir)
     return tFiles, tDirs
 end
 
-function cosUtils.ChatGPT(query)
-    local apiKey = "YOUR_OPENAI_API_KEY"
+function cosUtils.ChatGPT(query, maxRetries)
+    maxRetries = maxRetries or 5
+    local apiKey = "YOUR_OPENAI_API_KEY" -- Replace with your actual OpenAI API key
     if apiKey == "YOUR_OPENAI_API_KEY" then return nil, "API key not configured" end
     if not query or query == "" then return nil, "Query is empty" end
 
@@ -1296,16 +1284,29 @@ function cosUtils.ChatGPT(query)
         ["Authorization"] = "Bearer " .. apiKey
     }
 
-    local response, err = http.post("https://api.openai.com/v1/chat/completions", body, headers)
-    if not response then return nil, "HTTP error: " .. (err or "unknown") end
-
-    local responseData = textutils.unserializeJSON(response.readAll())
-    response.close()
-    if not responseData or not responseData.choices or not responseData.choices[1] then
-        return nil, "Invalid response: " .. (responseData and textutils.serializeJSON(responseData) or "nil")
+    local attempt = 0
+    while attempt < maxRetries do
+        attempt = attempt + 1
+        local response, err = http.post("https://api.openai.com/v1/chat/completions", body, headers)
+        if not response then
+            if string.find(err or "", "429") then
+                -- Too many requests: exponential backoff
+                local waitTime = 1 * (2 ^ (attempt - 1))
+                sleep(waitTime)
+            else
+                return nil, "HTTP error: " .. (err or "unknown")
+            end
+        else
+            local responseData = textutils.unserializeJSON(response.readAll())
+            response.close()
+            if not responseData or not responseData.choices or not responseData.choices[1] then
+                return nil, "Invalid response: " .. (responseData and textutils.serializeJSON(responseData) or "nil")
+            end
+            return responseData.choices[1].message.content
+        end
     end
 
-    return responseData.choices[1].message.content
+    return nil, "Failed after " .. maxRetries .. " attempts due to rate limits."
 end
 
 return cosUtils

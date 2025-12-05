@@ -38,19 +38,19 @@ local function sendChatMessage(message)
     chat.sendMessage(message, "Davey", "<>")
 end
 
-local function getHistory()
-    local history_lines = {} -- This will be the final flat list of formatted messages
-    for playerName, playerMessageList in pairs(players) do
-        local num_messages_to_take = math.min(10, #playerMessageList)
-        local displayName = playerName
-        if playerName == "gem" then displayName = "Davey" end
-        for i = num_messages_to_take, 1, -1 do
-            local message_object = playerMessageList[i]
-            table.insert(history_lines, displayName .. ": " .. message_object.message)
-        end
-    end
-    return history_lines
-end
+-- local function getHistory()
+--     local history_lines = {} -- This will be the final flat list of formatted messages
+--     for playerName, playerMessageList in pairs(players) do
+--         local num_messages_to_take = math.min(10, #playerMessageList)
+--         local displayName = playerName
+--         if playerName == "gem" then displayName = "Davey" end
+--         for i = num_messages_to_take, 1, -1 do
+--             local message_object = playerMessageList[i]
+--             table.insert(history_lines, displayName .. ": " .. message_object.message)
+--         end
+--     end
+--     return history_lines
+-- end
 
 local function receiveChatMessage()
     local event, sender, message
@@ -76,7 +76,7 @@ local function receiveChatMessage()
                 if query and query:match("%S") then
                     query = query:match("^%s*(.-)%s*$")
                     print("Sending query to Gemini: '" .. query .. "'")
-                    local response, err = cosUtils.ChatGPT(query, getHistory())
+                    local response, err = cosUtils.safeRun(cosUtils.ChatGPT(query))
                     if response then
                         print("Gemini response: " .. response)
                         cosUtils.logToOS(playerName .. " asked: " .. query)
