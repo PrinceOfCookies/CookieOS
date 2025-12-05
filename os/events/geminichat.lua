@@ -1,5 +1,5 @@
 -- !TODO MAKE THIS RUN IN COROUTINE SO THAT OTHER EVENTS CAN BE HANDLED
-local chat = peripheral.find("chatBox")
+local chat = peripheral.find("chat_box")
 if not chat then
     if term and term.setTextColor then
         local oldColor = term.getTextColor()
@@ -24,8 +24,8 @@ local function printError(msg)
     end
 end
 
-if not cosUtils or not cosUtils.Gemini then
-    printError("CRITICAL: cosUtils.Gemini function is not defined!")
+if not cosUtils or not cosUtils.ChatGPT then
+    printError("CRITICAL: cosUtils.ChatGPT function is not defined!")
     printError("Please ensure the Gemini API function is included in this script or required correctly.")
 end
 
@@ -76,7 +76,7 @@ local function receiveChatMessage()
                 if query and query:match("%S") then
                     query = query:match("^%s*(.-)%s*$")
                     print("Sending query to Gemini: '" .. query .. "'")
-                    local response, err = cosUtils.Gemini(query, getHistory())
+                    local response, err = cosUtils.ChatGPT(query, getHistory())
                     if response then
                         print("Gemini response: " .. response)
                         cosUtils.logToOS(playerName .. " asked: " .. query)

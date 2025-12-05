@@ -1276,169 +1276,36 @@ function cosUtils.getFilesAndDirs(sDir)
     return tFiles, tDirs
 end
 
-function cosUtils.Gemini(query, history)
-    local geminiApiKey = "YOUR_GEMINI_API_KEY" -- Replace with your actual Gemini API key
-    if geminiApiKey == "YOUR_GEMINI_API_KEY" then
-        -- Assuming printError is accessible here. If not, use plain print.
-        if printError then
-            printError("ERROR: Please replace 'YOUR_GEMINI_API_KEY' with your actual Gemini API key.")
-        else
-            print("ERROR: Please replace 'YOUR_GEMINI_API_KEY' with your actual Gemini API key.")
-        end
-        return nil, "Gemini API key not configured"
-    end
+function cosUtils.ChatGPT(query)
+    local apiKey = "YOUR_OPENAI_API_KEY"
+    if apiKey == "YOUR_OPENAI_API_KEY" then return nil, "API key not configured" end
+    if not query or query == "" then return nil, "Query is empty" end
 
-    local modelName = "gemini-1.5-flash-latest" -- Or "gemini-pro"
-    local apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/" .. modelName .. ":generateContent?key=" .. geminiApiKey
-
-    if not query or query:match("^%s*$") then -- Also check for empty or whitespace-only query
-        return nil, "Query is empty or whitespace only"
-    end
-
-    local headers = {
-        ["Content-Type"] = "application/json"
-    }
-
-    local system_instruction_text = "Your name is Davey. You're someone playing on a modded minecraft server, and you're an expert with create, computercraft, mekanism, powah, mystical agriculture and much more. Youre also knowladgable about programmng, and things outside minecraft. Please be concise in your responses."
-
-    -- Initialize the contents array for the API request
-    local request_contents = {}
-
-    -- Process the history and add it to request_contents
-    -- The history is expected to be a table of strings from getHistory()
-    -- Each string is "Speaker: Message"
-    if history and type(history) == "table" then
-        for _, history_line in ipairs(history) do
-            if type(history_line) == "string" and history_line ~= "" then
-                local role
-                local message_text
-
-                -- Check if the line is from "Davey" (the model)
-                local davey_prefix = "Davey: "
-                if history_line:sub(1, #davey_prefix) == davey_prefix then
-                    role = "model"
-                    message_text = history_line:sub(#davey_prefix + 1) -- Get text after "Davey: "
-                else
-                    -- Assume it's a user message "PlayerName: Actual message"
-                    role = "user"
-                    local colon_pos = history_line:find(":")
-                    if colon_pos then
-                        message_text = history_line:sub(colon_pos + 1)
-                        message_text = message_text:match("^%s*(.-)%s*$") -- Trim leading/trailing whitespace from message
-                    else
-                        -- Fallback if no colon is found (should not happen with your getHistory format)
-                        message_text = history_line
-                        -- Optionally log a warning here if the format is unexpected
-                        -- print("Warning: History line for user role missing colon: " .. history_line)
-                    end
-                end
-
-                -- Add valid, non-empty messages to the contents
-                if message_text and message_text:match("%S") then -- Check if message_text is not empty or just whitespace
-                    table.insert(request_contents, {
-                        role = role,
-                        parts = { { text = message_text } }
-                    })
-                else
-                    -- Optionally log skipped empty history messages
-                    -- print("Warning: Skipped empty message from history: " .. history_line)
-                end
-            end
-        end
-    end
-
-    -- Add the current user query as the last item in contents
-    table.insert(request_contents, {
-        role = "user",
-        parts = {
-            { text = query }
-        }
+    local body = textutils.serializeJSON({
+        model = "gpt-3.5-turbo",
+        messages = {
+            { role = "system", content = "You're an expert in modded Minecraft, concise answers." },
+            { role = "user", content = query }
+        },
+        temperature = 0.7,
+        max_tokens = 250
     })
 
-    local body = {
-        systemInstruction = {
-            parts = {
-                { text = system_instruction_text }
-            }
-        },
-        contents = request_contents, -- Use the constructed contents array
-        generationConfig = {
-            maxOutputTokens = 250,
-            temperature = 0.7,
-            -- topP = 0.9,
-            -- topK = 40
-        },
+    local headers = {
+        ["Content-Type"] = "application/json",
+        ["Authorization"] = "Bearer " .. apiKey
     }
 
-    local jsonBody, jsonErr = textutils.serializeJSON(body)
-    if not jsonBody then
-        return nil, "Failed to serialize JSON body: " .. (jsonErr or "unknown error")
+    local response, err = http.post("https://api.openai.com/v1/chat/completions", body, headers)
+    if not response then return nil, "HTTP error: " .. (err or "unknown") end
+
+    local responseData = textutils.unserializeJSON(response.readAll())
+    response.close()
+    if not responseData or not responseData.choices or not responseData.choices[1] then
+        return nil, "Invalid response: " .. (responseData and textutils.serializeJSON(responseData) or "nil")
     end
 
-    local responseHandle, err = http.post(apiUrl, jsonBody, headers) -- Renamed 'response' to 'responseHandle'
-    if not responseHandle then
-        return nil, "HTTP request failed: " .. (err or "unknown error")
-    end
-
-    local responseBody = responseHandle.readAll()
-    responseHandle.close()
-
-    local responseData, deserErr = textutils.unserializeJSON(responseBody)
-    if not responseData then
-        return nil, "Failed to unserialize JSON response from Gemini API: " .. (deserErr or "unknown error") .. ". Raw: " .. responseBody
-    end
-
-    if responseData.error then
-        local errorMsg = "Gemini API error: " .. (responseData.error.message or "Unknown error")
-        if responseData.error.details then
-            errorMsg = errorMsg .. " Details: " .. textutils.serializeJSON(responseData.error.details)
-        end
-        return nil, errorMsg
-    end
-
-    if not responseData.candidates or not responseData.candidates[1] then
-        local blockReason = "Unknown reason"
-        if responseData.promptFeedback and responseData.promptFeedback.blockReason then
-            blockReason = "Prompt blocked: " .. responseData.promptFeedback.blockReason
-        elseif responseData.candidates and responseData.candidates[1] and responseData.candidates[1].finishReason and responseData.candidates[1].finishReason ~= "STOP" then
-            blockReason = "Candidate finishReason: " .. responseData.candidates[1].finishReason
-             if responseData.candidates[1].safetyRatings then
-                blockReason = blockReason .. " SafetyRatings: "
-                for _, rating in ipairs(responseData.candidates[1].safetyRatings) do
-                    blockReason = blockReason .. rating.category .. "=" .. rating.probability .. "; "
-                end
-            end
-        end
-        return nil, "No candidates found in Gemini response. " .. blockReason .. ". Raw: " .. responseBody
-    end
-
-    if not responseData.candidates[1].content or
-       not responseData.candidates[1].content.parts or
-       not responseData.candidates[1].content.parts[1] or
-       not responseData.candidates[1].content.parts[1].text then
-        return nil, "Invalid response structure from Gemini API (missing content text). Raw: " .. responseBody
-    end
-
-    local content = responseData.candidates[1].content.parts[1].text
-
-    if not content or content:match("^%s*$") then -- Check for empty or whitespace-only content
-        local finishReason = (responseData.candidates[1] and responseData.candidates[1].finishReason) or "UNKNOWN"
-        if finishReason ~= "STOP" then
-             return nil, "Empty response content and finishReason was " .. finishReason .. ". Raw: " .. responseBody
-        end
-        -- Even if finishReason is STOP, an empty string might be the intended response, or an issue.
-        -- Depending on your needs, you might want to treat this as an error or allow empty responses.
-        -- For now, returning it as an error if the content is truly empty or just whitespace.
-        return nil, "Empty or whitespace-only response content from Gemini. Raw: " .. responseBody
-    end
-
-    content = content:match("^%s*(.-)%s*$")
-
-    if #content > 600 then
-        content = content:sub(1, 600) .. "..."
-    end
-
-    return content
+    return responseData.choices[1].message.content
 end
 
 return cosUtils

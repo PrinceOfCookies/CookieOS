@@ -59,7 +59,7 @@ local function loadingText(device)
     device.setBackgroundColor(colors.black)
     device.clear()
     shell.run("startup/replacements.lua")
-    shell.run("startup/startEvents.lua")
+    -- shell.run("startup/startEvents.lua")
     shell.run(".menu")
 end
 

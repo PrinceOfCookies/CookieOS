@@ -1,4 +1,4 @@
-local chatB = peripheral.find("chatBox")
+local chatB = peripheral.find("chat_box")
 local function sendMessage(msg)
     print("Sending message: " .. msg)
     chatB.sendMessage(msg, "Dave", "<>")
