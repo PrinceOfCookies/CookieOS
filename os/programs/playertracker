@@ -1,5 +1,5 @@
-local playerDetector = peripheral.find("playerDetector")
-local chatBox = peripheral.find("chatBox")
+local playerDetector = peripheral.find("player_detector")
+local chatBox = peripheral.find("chat_box")
 local monitor = peripheral.find("monitor")
 if not playerDetector or not chatBox then return end
 local onlinePlayers = playerDetector.getOnlinePlayers()
