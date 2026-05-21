@@ -2,9 +2,9 @@ shell.run("cd /")
 cosUtils.resetScreen(term)
 local drive = peripheral.find("drive")
 local speaker = peripheral.find("speaker")
-local chat = peripheral.find("chatBox")
+local chat = peripheral.find("chat_box")
 local monitor = peripheral.find("monitor")
-local playerTracker = peripheral.find("playerDetector")
+local playerTracker = peripheral.find("player_detector")
 
 local w, h = term.getSize()
 -- Draw Menu
