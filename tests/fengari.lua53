@@ -1,0 +1,28 @@
+-- Host-only Lua 5.3 compatibility runner. CC:Tweaked provides bit32 natively.
+local mask = 0xffffffff
+local function fold(operator, first, ...)
+    local result = first or 0
+    for index = 1, select("#", ...) do result = operator(result, select(index, ...)) end
+    return result & mask
+end
+
+bit32 = {
+    band = function(first, ...) return fold(function(a, b) return a & b end, first, ...) end,
+    bor = function(first, ...) return fold(function(a, b) return a | b end, first, ...) end,
+    bxor = function(first, ...) return fold(function(a, b) return a ~ b end, first, ...) end,
+    bnot = function(value) return (~value) & mask end,
+    lshift = function(value, count) return (value << count) & mask end,
+    rshift = function(value, count) return (value & mask) >> count end,
+    rrotate = function(value, count)
+        count = count % 32
+        value = value & mask
+        return ((value >> count) | (value << (32 - count))) & mask
+    end,
+}
+
+local target = assert(arg[1], "test name required")
+if target ~= "crypto" then
+    os.epoch = function() return 1000 end
+    os.getComputerID = function() return 1 end
+end
+dofile("tests/" .. target .. ".lua")

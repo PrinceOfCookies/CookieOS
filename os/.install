@@ -19,7 +19,7 @@ local preset = {
     -- The GitHub repository name
     repo = "CookieOS",
     -- The branch or commit tree to download (defaults to 'master')
-    branch = 'main',
+    branch = 'cookieos-v3-rewrite',
     -- The local folder to save all the files to (defaults to '/')
     path = '/',
     -- Function to run before starting the download
