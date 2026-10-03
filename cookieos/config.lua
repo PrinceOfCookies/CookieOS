@@ -27,10 +27,8 @@ local defaults = {
     transports = {},
     services = {},
     identity = {},
-    legacy = { enabled = false },
     auth = {
         dataPath = "/cookieos-data/users.db",
-        importPath = "/subterra_users.txt",
         trustedNodes = {},
         seedUsers = {},
         sessionSeconds = 1800,

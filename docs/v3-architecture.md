@@ -71,7 +71,6 @@ Keys are configured out of band. Do not commit production keys.
 - `cookieos/runtime.lua` assembles the node.
 - `cookieos/net/` owns all native networking.
 - `cookieos/services/` contains independently registered services.
-- `cookieos/legacy/subterra.lua` bridges selected SubTerra packets.
 
 ## Service contract
 
@@ -94,15 +93,8 @@ caught at the network boundary and also becomes an unsuccessful response.
 
 ## Migration sequence
 
-1. Install v3 on a new hybrid node using `examples/nodes/hybrid.lua`.
-2. Leave existing SubTerra computers running.
-3. Verify `node.ping`, discovery, and security state through the hybrid node.
-4. Port auth and personnel storage into v3 services.
-5. Port command and tracking clients.
-6. Replace display senders/receivers with event subscribers.
-7. Retire the compatibility gateway after the last legacy node is removed.
-
-The supplied gateway translates SubTerra core heartbeats into v3 events, handles
-security-state traffic, and translates legacy auth checks, user lists, and user or
-permission management. See [v3 authentication](v3-auth.md) for its temporary trust
-model and migration settings.
+1. Install an authority node using `examples/nodes/auth-server.lua`.
+2. Pair terminal, relay, tracker, and display nodes with the authority.
+3. Verify discovery, `node.ping`, and security state.
+4. Configure personnel, tracking, maintenance, and display services.
+5. Retire the old computers after their replacement nodes report healthy.

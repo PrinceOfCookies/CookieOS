@@ -7,6 +7,12 @@ Use the single guided `install.lua` for fresh installs, upgrades, repairs,
 reconfiguration, offline disks, recovery, and uninstall. See the
 [installation guide](docs/installation.md).
 
+On a CC:Tweaked computer with HTTP enabled:
+
+```lua
+wget run https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/install.lua
+```
+
 ## CookieOS v3 preview
 
 The repository now contains an opt-in distributed runtime for client, server,
@@ -15,7 +21,7 @@ responses, loop-safe relaying, supervised tasks, and an initial SubTerra compati
 gateway. Start with [the v3 quick start](docs/v3-quickstart.md) and read
 [the architecture](docs/v3-architecture.md).
 
-Native authorization, legacy user import, and trusted terminal configuration are
+Native authorization, user provisioning, and trusted terminal configuration are
 covered in [the v3 authentication guide](docs/v3-auth.md).
 Service packaging and dependency declarations are described in
 [the service manifest guide](docs/v3-services.md).

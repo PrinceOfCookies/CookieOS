@@ -3,7 +3,7 @@
 CookieOS now uses one self-contained `install.lua`. A release can publish it for:
 
 ```lua
-wget run https://example.invalid/cookieos/install.lua
+wget run https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/install.lua
 ```
 
 Running without arguments opens the hardware-aware role wizard. It detects attached
@@ -66,6 +66,10 @@ node tools/build-release.mjs 3.4.0 https://downloads.example/cookieos RELEASE_KE
 
 The builder creates `dist/release` with the online/offline package tree, hashes,
 authenticated manifest, and a single installer containing the matching release key.
-The current release authentication uses symmetric HMAC, so distributing that embedded
-key permits verification but cannot provide publisher-only signatures. Treat it as
-tamper detection until the release format moves to public-key signatures.
+The rewrite branch workflow automatically runs this builder and commits `release/`
+back to the branch. Release-only commits do not trigger another workflow run.
+
+The current release authentication uses a stable public HMAC integrity key embedded
+in the generated installer. It detects accidental corruption and inconsistent files,
+but cannot provide publisher-only signatures. Treat it as integrity checking until
+the release format moves to public-key signatures.

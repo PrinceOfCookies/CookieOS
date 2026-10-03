@@ -10,10 +10,9 @@ if (!version || !baseUrl || !signingKey) {
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const output = resolve(root, outputArg);
-const includeRoots = ["apis", "cookieos", "os", "programReplacements", "startup"];
+const includeRoots = ["cookieos"];
 const includeFiles = [
-  ".menu", ".settings", "back.lua", "cookieos-update.lua", "install.lua",
-  "pair-node.lua", "recovery.lua", "startup-v3.lua",
+  "cookieos-update.lua", "install.lua", "pair-node.lua", "recovery.lua", "startup-v3.lua",
 ];
 
 function walk(directory) {
@@ -29,10 +28,7 @@ function walk(directory) {
 const sources = [
   ...includeRoots.flatMap((name) => walk(join(root, name))),
   ...includeFiles.map((name) => join(root, name)),
-].filter((path) => {
-  const normalized = relative(root, path).split(sep).join("/");
-  return !normalized.startsWith("os/data/") && normalized !== "os/.install" && normalized !== "os/.uninstall";
-});
+];
 
 function luaType(value) {
   if (typeof value === "string") return "string";

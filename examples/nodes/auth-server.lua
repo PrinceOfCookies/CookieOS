@@ -26,7 +26,6 @@ return {
     },
     auth = {
         dataPath = "/cookieos-data/users.db",
-        importPath = "/subterra_users.txt",
         trustedNodes = {
             ["command-terminal-01"] = "lifeline4603",
         },

@@ -130,8 +130,6 @@ function runtime.start(configPath)
             health = entry.module.health,
         }
     end
-    require("cookieos.legacy.subterra").register(context)
-
     supervisor:add("network", function()
         local ok, err = pcall(function() network:run() end)
         network.running = false

@@ -143,9 +143,7 @@ function service.register(context)
         if stored then
             users = stored.users or stored
         else
-            local imported = loadSerialized(options.importPath)
-            users = imported and (imported.users or imported) or copy(options.seedUsers or {})
-            if imported then context.log.info("Imported legacy users from " .. options.importPath) end
+            users = copy(options.seedUsers or {})
         end
         for name, user in pairs(users) do users[name] = normalizeCredentials(normalizeUser(user)) end
         if initialize then
@@ -196,7 +194,6 @@ function service.register(context)
         end
         local claimed = tostring(payload and payload.actor or "")
         if packet and packet.localRequest and packet.source == context.config.node then return claimed end
-        if packet and packet.legacy and context.config.legacy and context.config.legacy.trustActors then return claimed end
         local trusted = packet and options.trustedNodes and options.trustedNodes[packet.source]
         if trusted == "*" then return claimed end
         if type(trusted) == "string" and (claimed == "" or normalize(claimed) == normalize(trusted)) then return trusted end

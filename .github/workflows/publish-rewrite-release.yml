@@ -1,0 +1,57 @@
+name: Publish CookieOS v3 rewrite bundle
+
+on:
+  push:
+    branches: [cookieos-v3-rewrite]
+    paths-ignore:
+      - "release/**"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version label
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cookieos-v3-rewrite-release
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: cookieos-v3-rewrite
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build online and offline bundle
+        shell: bash
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [ -z "$VERSION" ]; then
+            VERSION="3.4.0-dev.${GITHUB_SHA::7}"
+          fi
+          BASE_URL="https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release"
+          INTEGRITY_KEY="CookieOS-public-integrity-cookieos-v3-rewrite-v1"
+          node tools/build-release.mjs "$VERSION" "$BASE_URL" "$INTEGRITY_KEY" release
+
+      - name: Publish bundle to rewrite branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f release
+          if git diff --cached --quiet; then
+            echo "Release bundle is already current."
+            exit 0
+          fi
+          git commit -m "Publish generated CookieOS rewrite bundle [skip ci]"
+          git push origin HEAD:cookieos-v3-rewrite

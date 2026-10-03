@@ -45,7 +45,6 @@ local context = {
     config = {
         node = "auth-server",
         identity = {},
-        legacy = {},
         auth = {
             dataPath = "/cookieos-data/users.db",
             trustedNodes = { terminal = "admin" },

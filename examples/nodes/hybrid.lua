@@ -19,17 +19,8 @@ return {
         "maintenance",
     },
 
-    legacy = {
-        enabled = true,
-        side = "back",
-        coreProtocol = "subterra_core",
-        authProtocol = "subterra_auth",
-        trustActors = true,
-    },
-
     auth = {
         dataPath = "/cookieos-data/users.db",
-        importPath = "/subterra_users.txt",
         trustedNodes = {
             ["command-terminal-01"] = "lifeline4603",
         },
