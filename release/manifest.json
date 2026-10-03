@@ -1,0 +1,146 @@
+{
+  "version": "3.4.0-dev.efd8829",
+  "files": [
+    {
+      "path": "/cookieos-update.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos-update.lua",
+      "sha256": "bdc01d365ca6b790b27230fa595167008a326650cd11efcf46c4d99c8f8c26f7"
+    },
+    {
+      "path": "/cookieos/config.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/config.lua",
+      "sha256": "54ceaffa05a6363617bcae9bd54076de34feabfab041dab1abf030023b31a28d"
+    },
+    {
+      "path": "/cookieos/crypto/box.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/crypto/box.lua",
+      "sha256": "089bce0f98035ba16d8b5ea5ff1bd3017b7873ffc3bd949eeb4b90d48209943e"
+    },
+    {
+      "path": "/cookieos/crypto/canonical.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/crypto/canonical.lua",
+      "sha256": "d5d21587ed0ed362acc6e108facd109c7cc7f51f872f4f51ff74053d6aff6b2e"
+    },
+    {
+      "path": "/cookieos/crypto/sha256.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/crypto/sha256.lua",
+      "sha256": "e717caeb3193e30d352a0e8d389c609a9d425f0e97e333cd00b262392fb7b8ab"
+    },
+    {
+      "path": "/cookieos/log.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/log.lua",
+      "sha256": "b3ddfd45b488daaabac0ab290d1dc2596432afd48d62234aff473346715bb357"
+    },
+    {
+      "path": "/cookieos/net/envelope.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/net/envelope.lua",
+      "sha256": "1de24e92dbd382f786d6cd1748d19f9e399ee270ef42abced503278905bcf587"
+    },
+    {
+      "path": "/cookieos/net/network.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/net/network.lua",
+      "sha256": "d625bea7821e8d6d1fd08e5cf7a60513d61e8887b471d771734e95fcb7420e15"
+    },
+    {
+      "path": "/cookieos/runtime.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/runtime.lua",
+      "sha256": "2c3fa1549cba2d9a554c6bf8f85d5a39ead185533c9d6d003ea98991d88496f0"
+    },
+    {
+      "path": "/cookieos/services/audit.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/services/audit.lua",
+      "sha256": "7fe1fd0400e8b3ed376c0e260d9b6c6d3fff500298c93d956078355ce07c214b"
+    },
+    {
+      "path": "/cookieos/services/auth.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/services/auth.lua",
+      "sha256": "9347542dec5e43c2b8a83dde7d4c66a17cf0756b13f5fe498062acd5fc5e4153"
+    },
+    {
+      "path": "/cookieos/services/events.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/services/events.lua",
+      "sha256": "ae277cebce36f19e1364b2f4a06dcead248e78775dc7da5d4d2dda0ceb51980f"
+    },
+    {
+      "path": "/cookieos/services/maintenance.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/services/maintenance.lua",
+      "sha256": "a2363f619a5867ffad9ce12c5fa7041e0d9f89d903cb5f72f34dc68d9b94639e"
+    },
+    {
+      "path": "/cookieos/services/node.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/services/node.lua",
+      "sha256": "50c69d9e0322bce46791427cd2eaca872ed5161ffbcd0748bdfc8be7aed69b5e"
+    },
+    {
+      "path": "/cookieos/services/pairing.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/services/pairing.lua",
+      "sha256": "92bb1641fc1940eb40373197e00f56b67cab073863869fbc2216d09919d7ea6a"
+    },
+    {
+      "path": "/cookieos/services/personnel_display.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/services/personnel_display.lua",
+      "sha256": "109e01d9ba40f470753ade739351cb16cdc71ad79905443005ad3adfa5872808"
+    },
+    {
+      "path": "/cookieos/services/personnel.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/services/personnel.lua",
+      "sha256": "9add31919dadde823d2acfa99cc5aa29b3c5f14dcd7bb631f4b925ae912008b6"
+    },
+    {
+      "path": "/cookieos/services/player_tracker.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/services/player_tracker.lua",
+      "sha256": "51db189a07734a1b927feaa1e6a851a269f879d55e9ed42c22b9dca6ea97a8a4"
+    },
+    {
+      "path": "/cookieos/services/security.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/services/security.lua",
+      "sha256": "614f7ae13d3f9115bb4dde074677e70730e145882216cdec21c86a89813359b9"
+    },
+    {
+      "path": "/cookieos/services/terminal.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/services/terminal.lua",
+      "sha256": "cf1a56002b4b0f7b05db5a7331746174262c9d6900ecadddc70d69e9703be425"
+    },
+    {
+      "path": "/cookieos/supervisor.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/supervisor.lua",
+      "sha256": "a049e69daa08e074ce585169c123b1d9c7a14ee96efaf3f9e013aeba51d963bd"
+    },
+    {
+      "path": "/cookieos/trust.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/trust.lua",
+      "sha256": "f70ddc40723f472aa551375a33763ca198375ae3dffe5fb4c1cb2644f195ceae"
+    },
+    {
+      "path": "/cookieos/ui/monitor.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/ui/monitor.lua",
+      "sha256": "b64f3c31b96d41284c8e4b045133ebd0c89333f4a39eb90080971f21f16e73d6"
+    },
+    {
+      "path": "/cookieos/update.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/cookieos/update.lua",
+      "sha256": "4b3702832767466f039815f1459ce1c2136c33488a6307bd49cea847da86c102"
+    },
+    {
+      "path": "/install.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/install.lua",
+      "sha256": "c43cd706d9fbb697ee130742cd00f0250450330e9518a3aef5270d91f43632e2"
+    },
+    {
+      "path": "/pair-node.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/pair-node.lua",
+      "sha256": "eecc193a8bd7bb38bad89ca98cf407040b87f50408a5ef73d5936404bf75bdd2"
+    },
+    {
+      "path": "/recovery.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/recovery.lua",
+      "sha256": "0fc176728d5eb461606e2585267b088d7c45d08c32f1a8ba682990b9c7519519"
+    },
+    {
+      "path": "/startup-v3.lua",
+      "url": "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/packages/startup-v3.lua",
+      "sha256": "eea2e45c262c07902cb2a22328932cd81b90003663c3442c8e40660bc5541068"
+    }
+  ],
+  "signature": "73b9cd4ed127617a81126ee6159d623a033f55fcb7f52292b4fda86153a07349"
+}
