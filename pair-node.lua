@@ -10,16 +10,27 @@ if not config.identity.nodeKey then error("Configure identity.nodeKey before pai
 local side = args[2] or config.transports[1].side
 if not rednet.isOpen(side) then rednet.open(side) end
 
-write("One-time pairing code: ")
-local code = read():upper():gsub("%s", "")
-if #code < 12 then error("Pairing code is too short") end
+print("The CookieOS authority server must generate the pairing code.")
+print("On an authenticated administrator terminal, run: paircode")
+print("Then enter the 16-character one-time code shown there.")
+local code
+while not code do
+    write("Authority pairing code: ")
+    local entered = read():upper():gsub("[%s%-]", "")
+    if #entered == 16 and not entered:find("[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]") then
+        code = entered
+    else
+        printError("Invalid code. Enter exactly 16 characters from the authority's paircode command.")
+    end
+end
 local requestId = config.node .. ":" .. os.epoch("utc") .. ":" .. math.random()
 local sealed = Box.seal(code, textutils.serialize({ node = config.node, key = config.identity.nodeKey }))
-rednet.broadcast({ type = "pair_request", requestId = requestId, code = code, sealed = sealed }, config.pairing.protocol)
+local protocol = config.pairing and config.pairing.protocol or "cookieos_pairing"
+rednet.broadcast({ type = "pair_request", requestId = requestId, code = code, sealed = sealed }, protocol)
 
 local started = os.clock()
 while os.clock() - started < 10 do
-    local _, response = rednet.receive(config.pairing.protocol, 2)
+    local _, response = rednet.receive(protocol, 2)
     if type(response) == "table" and response.type == "pair_response" and response.requestId == requestId then
         local plaintext, openError = Box.open(code, response.sealed)
         if not plaintext then error(openError) end

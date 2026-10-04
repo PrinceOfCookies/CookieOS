@@ -3,8 +3,10 @@
 ## Pairing
 
 Run the `pairing` service only on the authority node and set `pairing.authority = true`.
-From an authenticated administrator terminal, run `paircode`. On the new computer,
-configure a unique `identity.nodeKey`, then run:
+The authority creates the code; the new node does not choose one. From an authenticated
+administrator terminal connected to the authority, run `paircode`. It prints a
+16-character, one-use code. On the new computer, configure a unique `identity.nodeKey`,
+then run:
 
 ```text
 pair-node.lua

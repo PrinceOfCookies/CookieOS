@@ -26,7 +26,7 @@ local function printHelp()
     print("  personnel [filter]    List personnel")
     print("  psearch <query>       Search personnel")
     print("  topics                List event topics")
-    print("  paircode              Create a one-time node pairing code")
+    print("  paircode              Authority creates a 16-character pairing code")
     print("  revoke <node>         Revoke a paired node")
 end
 
@@ -127,7 +127,14 @@ function service.register(context)
             elseif command == "topics" then
                 printResponse(context.network:request("events.topics", authorized()))
             elseif command == "paircode" then
-                printResponse(context.network:request("pairing.begin", authorized()))
+                local response, err = context.network:request("pairing.begin", authorized())
+                if not response then printError(err or "No response")
+                elseif not response.ok then printError(response.error or "Request failed")
+                else
+                    print("Authority-generated pairing code:")
+                    print("  " .. tostring(response.data.code))
+                    print("Enter this 16-character code on the new node. It expires in about two minutes and can be used once.")
+                end
             elseif command == "revoke" and words[2] then
                 printResponse(context.network:request("pairing.revoke", authorized({ node = words[2] })))
             elseif command == "routes" then
