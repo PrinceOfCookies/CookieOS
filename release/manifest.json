@@ -1,5 +1,5 @@
 {
-  "version": "3.4.0-dev.cookiesecurity-guide",
+  "version": "3.4.0-dev.14897b4",
   "repository": "PrinceOfCookies/CookieOS",
   "ref": "cookieos-v3-rewrite",
   "bundle": "release/bundle.json",
@@ -150,5 +150,5 @@
       "sha256": "eea2e45c262c07902cb2a22328932cd81b90003663c3442c8e40660bc5541068"
     }
   ],
-  "signature": "c605666c22b760c1438e526e512a7aefe87b21d042655cecfeacb6f390b3c601"
+  "signature": "b60ee0abce5d6892eecde5d218d83674f2fe39e52716497942cf62b0aa99cff1"
 }
