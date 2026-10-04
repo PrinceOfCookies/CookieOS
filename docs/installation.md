@@ -10,7 +10,10 @@ exit()
 install.lua
 ```
 
-The installer then obtains the manifest and every package through `api.github.com`.
+The published installer embeds its signed manifest and complete package bundle, so a
+fresh installation uses only the single API request that downloads `install.lua`.
+Explicit `--version` and `--manifest` installs obtain one manifest and one bundled
+payload instead of requesting every package separately.
 
 Running without arguments opens the hardware-aware role wizard. It detects attached
 modems, monitors, and service-specific peripherals, then generates
@@ -72,8 +75,10 @@ node tools/build-release.mjs 3.4.0 PrinceOfCookies/CookieOS cookieos-v3-rewrite 
 
 The builder creates `dist/release` with the online/offline package tree, hashes,
 authenticated manifest, and a single installer containing the matching release key.
-Manifest entries contain repository-relative `source` paths plus the repository and
-Git ref needed by the GitHub API; they contain no GitHub download URLs.
+Manifest entries contain repository-relative `source` paths plus the repository, Git
+ref, and bundled-payload path needed by the GitHub API; they contain no GitHub download
+URLs. The generated installer carries that manifest and bundle for rate-limit-friendly
+fresh installs.
 The rewrite branch workflow automatically runs this builder and commits `release/`
 back to the branch. Release-only commits do not trigger another workflow run.
 

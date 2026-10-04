@@ -30,6 +30,9 @@ manifest contains a version, signature, and file entries with absolute target pa
 repository-relative source paths, and SHA-256 hashes. The manifest signature covers every field except
 the signature itself.
 
+Published releases combine package contents into `release/bundle.json`. Normal updater
+runs therefore use two GitHub API requests: one for the manifest and one for the bundle.
+
 Updates are downloaded into `/cookieos-update/staged`, verified before live files are
 touched, and backed up under `/cookieos-update/backup`. Configuration and
 `/cookieos-data` targets are rejected. After application, CookieOS must keep networking

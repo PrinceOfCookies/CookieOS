@@ -3,6 +3,8 @@ local args = { ... }
 local DEFAULT_REPOSITORY = "PrinceOfCookies/CookieOS"
 local DEFAULT_REF = "cookieos-v3-rewrite"
 local EMBEDDED_RELEASE_KEY = "COOKIEOS_RELEASE_KEY_NOT_CONFIGURED"
+local EMBEDDED_MANIFEST = nil
+local EMBEDDED_BUNDLE = nil
 local INSTALL_ROOT = "/cookieos-install"
 local CONFIG_PATH = "/cookieos-node.lua"
 
@@ -221,12 +223,24 @@ local function loadManifest()
   if not http then error("HTTP is disabled; use --offline <disk path>")end
   local version=option("--version")
   local manifestUrl=option("--manifest");local manifestRaw,manifestError
-  if manifestUrl then manifestRaw,manifestError=fetchHttpFile(manifestUrl)
+  local embeddedBundle
+  if not manifestUrl and not version and EMBEDDED_MANIFEST then
+    local manifestOk;manifestOk,manifestRaw=pcall(decodeBase64,EMBEDDED_MANIFEST);if not manifestOk then error("Embedded manifest is invalid")end
+    local bundleOk,bundleRaw=pcall(decodeBase64,EMBEDDED_BUNDLE or"");if not bundleOk then error("Embedded bundle is invalid")end
+    embeddedBundle=textutils.unserializeJSON(bundleRaw);if type(embeddedBundle)~="table"or type(embeddedBundle.files)~="table"then error("Embedded bundle is invalid")end
+  elseif manifestUrl then manifestRaw,manifestError=fetchHttpFile(manifestUrl)
   else manifestRaw,manifestError=fetchGitHubFile("release/manifest.json",version or DEFAULT_REF,DEFAULT_REPOSITORY)end
   if not manifestRaw then error("Manifest download failed: "..tostring(manifestError))end
   local manifest=textutils.unserializeJSON(manifestRaw);if type(manifest)~="table"then error("Invalid manifest JSON")end
   local repository=manifest.repository or DEFAULT_REPOSITORY;local ref=version or manifest.ref or DEFAULT_REF
+  local bundle=embeddedBundle
+  if not bundle and type(manifest.bundle)=="string"then
+    local bundleRaw,bundleError=fetchGitHubFile(manifest.bundle,ref,repository)
+    if not bundleRaw then error("Release bundle download failed: "..tostring(bundleError))end
+    bundle=textutils.unserializeJSON(bundleRaw);if type(bundle)~="table"or type(bundle.files)~="table"then error("Invalid release bundle")end
+  end
   return manifest,function(file)
+    if bundle then local contents=bundle.files[file.source];if type(contents)~="string"then return nil,"File missing from release bundle: "..tostring(file.source)end;return contents end
     if type(file.source)=="string"then return fetchGitHubFile(file.source,ref,repository)end
     if type(file.url)=="string"then return fetchHttpFile(file.url)end
     return nil,"Manifest entry has no source"

@@ -36,8 +36,20 @@ local manifest = textutils.unserializeJSON(raw)
 if type(manifest) ~= "table" then error("Manifest is not valid JSON") end
 local repository = manifest.repository or GitHub.defaultRepository
 local releaseRef = requestedRef or manifest.ref or GitHub.defaultRef
+local bundle
+if type(manifest.bundle) == "string" then
+    local bundleRaw, bundleError = GitHub.fetchFile(manifest.bundle, releaseRef, repository)
+    if not bundleRaw then error("Release bundle download failed: " .. tostring(bundleError)) end
+    bundle = textutils.unserializeJSON(bundleRaw)
+    if type(bundle) ~= "table" or type(bundle.files) ~= "table" then error("Release bundle is not valid JSON") end
+end
 
 local ok, stageError = Update.stage(config, manifest, function(file)
+    if bundle then
+        local contents = bundle.files[file.source]
+        if type(contents) ~= "string" then return nil, "File missing from release bundle: " .. tostring(file.source) end
+        return contents
+    end
     if type(file.source) == "string" then return GitHub.fetchFile(file.source, releaseRef, repository) end
     if type(file.url) == "string" then return fetchHttpFile(file.url) end
     return nil, "Manifest entry has no source"

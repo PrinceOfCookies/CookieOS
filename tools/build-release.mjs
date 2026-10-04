@@ -55,12 +55,14 @@ function canonical(value, seen = new Set()) {
 
 rmSync(output, { recursive: true, force: true });
 mkdirSync(join(output, "packages"), { recursive: true });
+const bundledFiles = {};
 const files = sources.map((source) => {
   const path = relative(root, source).split(sep).join("/");
   const contents = readFileSync(source);
   const destination = join(output, "packages", path);
   mkdirSync(dirname(destination), { recursive: true });
   cpSync(source, destination);
+  bundledFiles[`release/packages/${path}`] = contents.toString("utf8");
   return {
     path: `/${path}`,
     source: `release/packages/${path}`,
@@ -68,13 +70,24 @@ const files = sources.map((source) => {
   };
 }).sort((a, b) => a.path.localeCompare(b.path));
 
-const manifest = { version, repository, ref, files };
+const bundle = { format: 1, files: bundledFiles };
+const bundleJson = JSON.stringify(bundle);
+writeFileSync(join(output, "bundle.json"), bundleJson);
+
+const manifest = { version, repository, ref, bundle: "release/bundle.json", files };
 manifest.signature = createHmac("sha256", signingKey).update(canonical(manifest)).digest("hex");
-writeFileSync(join(output, "manifest.json"), JSON.stringify(manifest, null, 2));
+const manifestJson = JSON.stringify(manifest, null, 2);
+writeFileSync(join(output, "manifest.json"), manifestJson);
 
 const installer = readFileSync(join(root, "install.lua"), "utf8").replace(
   'local EMBEDDED_RELEASE_KEY = "COOKIEOS_RELEASE_KEY_NOT_CONFIGURED"',
   `local EMBEDDED_RELEASE_KEY = ${JSON.stringify(signingKey)}`,
+).replace(
+  "local EMBEDDED_MANIFEST = nil",
+  `local EMBEDDED_MANIFEST = ${JSON.stringify(Buffer.from(manifestJson).toString("base64"))}`,
+).replace(
+  "local EMBEDDED_BUNDLE = nil",
+  `local EMBEDDED_BUNDLE = ${JSON.stringify(Buffer.from(bundleJson).toString("base64"))}`,
 );
 writeFileSync(join(output, "install.lua"), installer);
 console.log(`Built CookieOS ${version}: ${files.length} files in ${output}`);
