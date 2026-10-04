@@ -118,8 +118,22 @@ local function fetchHttpFile(url)
   if code and code>=400 then return nil,"HTTP request failed with status "..code end
   return body
 end
+local function decodeBase64(value)
+  value=value:gsub("%s","");if type(textutils.decodeBase64)=="function"then return textutils.decodeBase64(value)end
+  if#value%4~=0 then error("invalid base64 length")end
+  local alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";local lookup={}
+  for index=1,#alphabet do lookup[alphabet:sub(index,index)]=index-1 end
+  local output={};for offset=1,#value,4 do
+    local a,b,c,d=value:sub(offset,offset),value:sub(offset+1,offset+1),value:sub(offset+2,offset+2),value:sub(offset+3,offset+3)
+    if not lookup[a]or not lookup[b]or(c~="="and not lookup[c])or(d~="="and not lookup[d])or(c=="="and d~="=")then error("invalid base64 data")end
+    if(c=="="or d=="=")and offset+3~=#value then error("invalid base64 padding")end
+    local combined=lookup[a]*262144+lookup[b]*4096+(lookup[c]or 0)*64+(lookup[d]or 0)
+    output[#output+1]=string.char(math.floor(combined/65536)%256)
+    if c~="="then output[#output+1]=string.char(math.floor(combined/256)%256)end
+    if d~="="then output[#output+1]=string.char(combined%256)end
+  end;return table.concat(output)
+end
 local function fetchGitHubFile(path,ref,repository)
-  if type(textutils.decodeBase64)~="function"then return nil,"This CC:Tweaked version does not provide textutils.decodeBase64"end
   repository=repository or DEFAULT_REPOSITORY;ref=ref or DEFAULT_REF
   local url="https://api.github.com/repos/"..repository.."/contents/"..urlEncodePath(path).."?ref="..urlEncode(ref)
   local headers={["User-Agent"]="CookieOS",["Accept"]="application/vnd.github+json",["X-GitHub-Api-Version"]="2022-11-28"}
@@ -132,7 +146,7 @@ local function fetchGitHubFile(path,ref,repository)
   if code and code>=400 then return nil,"GitHub API error "..code..": "..tostring(payload.message or"unknown error")end
   if payload.message and not payload.content then return nil,"GitHub API error: "..tostring(payload.message)end
   if payload.encoding~="base64"or type(payload.content)~="string"then return nil,"GitHub API response did not contain base64 file content"end
-  local decodedOk,contents=pcall(textutils.decodeBase64,payload.content:gsub("%s",""))
+  local decodedOk,contents=pcall(decodeBase64,payload.content)
   if not decodedOk or type(contents)~="string"then return nil,"GitHub API returned invalid base64 content: "..tostring(contents)end
   return contents
 end

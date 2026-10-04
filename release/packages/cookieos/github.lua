@@ -33,11 +33,30 @@ local function readResponse(response)
     return body, nil, code
 end
 
+local function decodeBase64(value)
+    value = value:gsub("%s", "")
+    if type(textutils.decodeBase64) == "function" then return textutils.decodeBase64(value) end
+    if #value % 4 ~= 0 then error("invalid base64 length") end
+    local alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    local lookup = {}
+    for index = 1, #alphabet do lookup[alphabet:sub(index, index)] = index - 1 end
+    local output = {}
+    for offset = 1, #value, 4 do
+        local a, b, c, d = value:sub(offset, offset), value:sub(offset + 1, offset + 1), value:sub(offset + 2, offset + 2), value:sub(offset + 3, offset + 3)
+        if not lookup[a] or not lookup[b] or (c ~= "=" and not lookup[c]) or (d ~= "=" and not lookup[d]) or (c == "=" and d ~= "=") then
+            error("invalid base64 data")
+        end
+        if (c == "=" or d == "=") and offset + 3 ~= #value then error("invalid base64 padding") end
+        local combined = lookup[a] * 262144 + lookup[b] * 4096 + (lookup[c] or 0) * 64 + (lookup[d] or 0)
+        output[#output + 1] = string.char(math.floor(combined / 65536) % 256)
+        if c ~= "=" then output[#output + 1] = string.char(math.floor(combined / 256) % 256) end
+        if d ~= "=" then output[#output + 1] = string.char(combined % 256) end
+    end
+    return table.concat(output)
+end
+
 function github.fetchFile(path, ref, repository)
     if not http then return nil, "HTTP is disabled" end
-    if type(textutils.decodeBase64) ~= "function" then
-        return nil, "This CC:Tweaked version does not provide textutils.decodeBase64"
-    end
     repository = repository or DEFAULT_REPOSITORY
     ref = ref or DEFAULT_REF
     local url = API_ROOT .. repository .. "/contents/" .. encodePath(path) .. "?ref=" .. encode(ref)
@@ -57,8 +76,7 @@ function github.fetchFile(path, ref, repository)
     if payload.encoding ~= "base64" or type(payload.content) ~= "string" then
         return nil, "GitHub API response did not contain base64 file content"
     end
-    local cleanContent = payload.content:gsub("%s", "")
-    local base64Ok, contents = pcall(textutils.decodeBase64, cleanContent)
+    local base64Ok, contents = pcall(decodeBase64, payload.content)
     if not base64Ok or type(contents) ~= "string" then
         return nil, "GitHub API returned invalid base64 content: " .. tostring(contents)
     end

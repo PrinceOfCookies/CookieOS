@@ -6,10 +6,6 @@ textutils = {
     unserializeJSON = function()
         return { encoding = "base64", content = "SGVs\nbG8=\n" }
     end,
-    decodeBase64 = function(value)
-        assert(value == "SGVsbG8=")
-        return "Hello"
-    end,
 }
 http = {
     get = function(url, headers)
