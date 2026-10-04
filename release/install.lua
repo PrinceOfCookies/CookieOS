@@ -1,6 +1,7 @@
 -- CookieOS single-file installer. This file intentionally has no CookieOS dependencies.
 local args = { ... }
-local DEFAULT_MANIFEST = "https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/manifest.json"
+local DEFAULT_REPOSITORY = "PrinceOfCookies/CookieOS"
+local DEFAULT_REF = "cookieos-v3-rewrite"
 local EMBEDDED_RELEASE_KEY = "CookieOS-public-integrity-cookieos-v3-rewrite-v1"
 local INSTALL_ROOT = "/cookieos-install"
 local CONFIG_PATH = "/cookieos-node.lua"
@@ -97,6 +98,44 @@ local function readFile(path)
   local handle=fs.open(path,"rb")or fs.open(path,"r");if not handle then return nil end
   local value=handle.readAll();handle.close();return value
 end
+local function urlEncode(value)
+  return(tostring(value):gsub("([^%w%-_%.~])",function(character)return string.format("%%%02X",character:byte())end))
+end
+local function urlEncodePath(path)
+  local parts={};for part in tostring(path):gmatch("[^/]+")do parts[#parts+1]=urlEncode(part)end;return table.concat(parts,"/")
+end
+local function readHttpResponse(response,label)
+  local code;if response.getResponseCode then local ok,value=pcall(response.getResponseCode);if ok then code=value end end
+  local ok,body=pcall(response.readAll);pcall(response.close)
+  if not ok then return nil,"Could not read "..label..": "..tostring(body)end
+  return body,nil,code
+end
+local function fetchHttpFile(url)
+  local response,requestError,errorResponse=http.get(url,{["User-Agent"]="CookieOS"});response=response or errorResponse
+  if not response then return nil,"HTTP request failed: "..tostring(requestError)end
+  local body,readError,code=readHttpResponse(response,"HTTP response")
+  if not body then return nil,readError end
+  if code and code>=400 then return nil,"HTTP request failed with status "..code end
+  return body
+end
+local function fetchGitHubFile(path,ref,repository)
+  if type(textutils.decodeBase64)~="function"then return nil,"This CC:Tweaked version does not provide textutils.decodeBase64"end
+  repository=repository or DEFAULT_REPOSITORY;ref=ref or DEFAULT_REF
+  local url="https://api.github.com/repos/"..repository.."/contents/"..urlEncodePath(path).."?ref="..urlEncode(ref)
+  local headers={["User-Agent"]="CookieOS",["Accept"]="application/vnd.github+json",["X-GitHub-Api-Version"]="2022-11-28"}
+  local response,requestError,errorResponse=http.get(url,headers);response=response or errorResponse
+  if not response then return nil,"GitHub API request failed: "..tostring(requestError)end
+  local body,readError,code=readHttpResponse(response,"GitHub API response")
+  if not body then return nil,readError end
+  local ok,payload=pcall(textutils.unserializeJSON,body)
+  if not ok or type(payload)~="table"then return nil,"GitHub API returned invalid JSON"..(code and(" (HTTP "..code..")")or"")end
+  if code and code>=400 then return nil,"GitHub API error "..code..": "..tostring(payload.message or"unknown error")end
+  if payload.message and not payload.content then return nil,"GitHub API error: "..tostring(payload.message)end
+  if payload.encoding~="base64"or type(payload.content)~="string"then return nil,"GitHub API response did not contain base64 file content"end
+  local decodedOk,contents=pcall(textutils.decodeBase64,payload.content:gsub("%s",""))
+  if not decodedOk or type(contents)~="string"then return nil,"GitHub API returned invalid base64 content: "..tostring(contents)end
+  return contents
+end
 local function safePath(path)
   return type(path)=="string"and path:sub(1,1)=="/"and not path:find("..",1,true)
     and path~=CONFIG_PATH and not path:find("^/cookieos%-data/")and not path:find("^/cookieos%-install/")
@@ -167,17 +206,28 @@ local function loadManifest()
   end
   if not http then error("HTTP is disabled; use --offline <disk path>")end
   local version=option("--version")
-  local url=option("--manifest")or(version and("https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/"..version.."/release/manifest.json"))or DEFAULT_MANIFEST
-  local response,err=http.get(url);if not response then error("Manifest download failed: "..tostring(err))end
-  local manifest=textutils.unserializeJSON(response.readAll());response.close();if not manifest then error("Invalid manifest JSON")end
-  return manifest,function(file)local r,e=http.get(file.url);if not r then return nil,e end;local body=r.readAll();r.close();return body end
+  local manifestUrl=option("--manifest");local manifestRaw,manifestError
+  if manifestUrl then manifestRaw,manifestError=fetchHttpFile(manifestUrl)
+  else manifestRaw,manifestError=fetchGitHubFile("release/manifest.json",version or DEFAULT_REF,DEFAULT_REPOSITORY)end
+  if not manifestRaw then error("Manifest download failed: "..tostring(manifestError))end
+  local manifest=textutils.unserializeJSON(manifestRaw);if type(manifest)~="table"then error("Invalid manifest JSON")end
+  local repository=manifest.repository or DEFAULT_REPOSITORY;local ref=version or manifest.ref or DEFAULT_REF
+  return manifest,function(file)
+    if type(file.source)=="string"then return fetchGitHubFile(file.source,ref,repository)end
+    if type(file.url)=="string"then return fetchHttpFile(file.url)end
+    return nil,"Manifest entry has no source"
+  end
 end
 local function verifyManifest(manifest)
   if type(manifest)~="table"or type(manifest.files)~="table"or type(manifest.version)~="string"then error("Invalid release manifest")end
   local key=option("--key")or(EMBEDDED_RELEASE_KEY~="COOKIEOS_RELEASE_KEY_NOT_CONFIGURED"and EMBEDDED_RELEASE_KEY)
   if key then if hmac(key,canonical(unsignedManifest(manifest)))~=manifest.signature then error("Release signature invalid")end
   elseif not yes("Installer has no pinned release key. Continue with file-hash verification only?",false)then error("Installation cancelled")end
-  for _,file in ipairs(manifest.files)do if not safePath(file.path)or type(file.sha256)~="string"then error("Unsafe manifest path")end end
+  for _,file in ipairs(manifest.files)do
+    if not safePath(file.path)or type(file.sha256)~="string"then error("Unsafe manifest path")end
+    if file.source~=nil and(type(file.source)~="string"or file.source:sub(1,1)=="/"or file.source:find("..",1,true))then error("Unsafe manifest source")end
+    if type(file.source)~="string"and type(file.url)~="string"then error("Manifest entry has no source")end
+  end
   return key
 end
 local function stage(manifest,fetch)

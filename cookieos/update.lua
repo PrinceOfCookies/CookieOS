@@ -47,6 +47,10 @@ function update.verifyManifest(manifest, signingKey)
     end
     for _, file in ipairs(manifest.files) do
         if not validPath(file.path) or type(file.sha256) ~= "string" then return nil, "Unsafe release path" end
+        if file.source ~= nil and (type(file.source) ~= "string" or file.source:sub(1, 1) == "/" or file.source:find("..", 1, true)) then
+            return nil, "Unsafe release source"
+        end
+        if type(file.source) ~= "string" and type(file.url) ~= "string" then return nil, "Release entry has no source" end
     end
     return true
 end

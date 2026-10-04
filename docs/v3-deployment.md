@@ -23,9 +23,11 @@ still recommended for a future protocol version.
 
 ## Updates
 
-Configure `update.signingKey`, then run `cookieos-update.lua <manifest URL>`. A release
+Configure `update.signingKey`, then run `cookieos-update.lua` for the default release,
+`cookieos-update.lua <branch-or-tag>` for another Git ref, or pass an explicit HTTP
+manifest URL. A release
 manifest contains a version, signature, and file entries with absolute target paths,
-download URLs, and SHA-256 hashes. The manifest signature covers every field except
+repository-relative source paths, and SHA-256 hashes. The manifest signature covers every field except
 the signature itself.
 
 Updates are downloaded into `/cookieos-update/staged`, verified before live files are

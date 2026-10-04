@@ -3,9 +3,9 @@ import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFi
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const [version, baseUrl, signingKey, outputArg = "dist/release"] = process.argv.slice(2);
-if (!version || !baseUrl || !signingKey) {
-  throw new Error("Usage: node tools/build-release.mjs <version> <base URL> <signing key> [output]");
+const [version, repository, ref, signingKey, outputArg = "dist/release"] = process.argv.slice(2);
+if (!version || !repository || !ref || !signingKey) {
+  throw new Error("Usage: node tools/build-release.mjs <version> <repository> <ref> <signing key> [output]");
 }
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -55,7 +55,6 @@ function canonical(value, seen = new Set()) {
 
 rmSync(output, { recursive: true, force: true });
 mkdirSync(join(output, "packages"), { recursive: true });
-const normalizedBase = baseUrl.replace(/\/$/, "");
 const files = sources.map((source) => {
   const path = relative(root, source).split(sep).join("/");
   const contents = readFileSync(source);
@@ -64,12 +63,12 @@ const files = sources.map((source) => {
   cpSync(source, destination);
   return {
     path: `/${path}`,
-    url: `${normalizedBase}/packages/${path.split("/").map(encodeURIComponent).join("/")}`,
+    source: `release/packages/${path}`,
     sha256: createHash("sha256").update(contents).digest("hex"),
   };
 }).sort((a, b) => a.path.localeCompare(b.path));
 
-const manifest = { version, files };
+const manifest = { version, repository, ref, files };
 manifest.signature = createHmac("sha256", signingKey).update(canonical(manifest)).digest("hex");
 writeFileSync(join(output, "manifest.json"), JSON.stringify(manifest, null, 2));
 

@@ -39,9 +39,8 @@ jobs:
           if [ -z "$VERSION" ]; then
             VERSION="3.4.0-dev.${GITHUB_SHA::7}"
           fi
-          BASE_URL="https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release"
           INTEGRITY_KEY="CookieOS-public-integrity-cookieos-v3-rewrite-v1"
-          node tools/build-release.mjs "$VERSION" "$BASE_URL" "$INTEGRITY_KEY" release
+          node tools/build-release.mjs "$VERSION" "PrinceOfCookies/CookieOS" "cookieos-v3-rewrite" "$INTEGRITY_KEY" release
 
       - name: Publish bundle to rewrite branch
         shell: bash

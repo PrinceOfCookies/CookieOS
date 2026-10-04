@@ -1,10 +1,16 @@
 # Installing CookieOS
 
-CookieOS now uses one self-contained `install.lua`. A release can publish it for:
+CookieOS uses one self-contained `install.lua`. Bootstrap it through GitHub's Contents
+API, which returns base64-encoded JSON:
 
 ```lua
-wget run https://raw.githubusercontent.com/PrinceOfCookies/CookieOS/cookieos-v3-rewrite/release/install.lua
+lua
+local r=assert(http.get("https://api.github.com/repos/PrinceOfCookies/CookieOS/contents/release/install.lua?ref=cookieos-v3-rewrite",{["User-Agent"]="CookieOS"}));local j=textutils.unserializeJSON(r.readAll());r.close();local o=fs.open("install.lua","w");o.write(textutils.decodeBase64(j.content:gsub("%s","")));o.close()
+exit()
+install.lua
 ```
+
+The installer then obtains the manifest and every package through `api.github.com`.
 
 Running without arguments opens the hardware-aware role wizard. It detects attached
 modems, monitors, and service-specific peripherals, then generates
@@ -61,11 +67,13 @@ required.
 From the repository:
 
 ```text
-node tools/build-release.mjs 3.4.0 https://downloads.example/cookieos RELEASE_KEY
+node tools/build-release.mjs 3.4.0 PrinceOfCookies/CookieOS cookieos-v3-rewrite RELEASE_KEY
 ```
 
 The builder creates `dist/release` with the online/offline package tree, hashes,
 authenticated manifest, and a single installer containing the matching release key.
+Manifest entries contain repository-relative `source` paths plus the repository and
+Git ref needed by the GitHub API; they contain no GitHub download URLs.
 The rewrite branch workflow automatically runs this builder and commits `release/`
 back to the branch. Release-only commits do not trigger another workflow run.
 

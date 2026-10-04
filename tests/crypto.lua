@@ -13,7 +13,7 @@ assert(Box.open("pairing-code", sealed) == "node secret")
 sealed.cipher = sealed.cipher:sub(1, -2) .. (sealed.cipher:sub(-1) == "0" and "1" or "0")
 assert(Box.open("pairing-code", sealed) == nil)
 
-local manifest = { version = "3.4.0", files = {{ path = "/cookieos/runtime.lua", sha256 = Sha256.hex("content") }} }
+local manifest = { version = "3.4.0", files = {{ path = "/cookieos/runtime.lua", source = "release/packages/cookieos/runtime.lua", sha256 = Sha256.hex("content") }} }
 manifest.signature = Sha256.hmac("release-key", Canonical.encode(manifest))
 assert(Update.verifyManifest(manifest, "release-key"))
 manifest.version = "tampered"
