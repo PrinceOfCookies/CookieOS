@@ -100,6 +100,11 @@ local function readFile(path)
   local handle=fs.open(path,"rb")or fs.open(path,"r");if not handle then return nil end
   local value=handle.readAll();handle.close();return value
 end
+local function runProgram(path,...)
+  if shell and type(shell.run)=="function"then return shell.run(path,...)end
+  if type(os.run)=="function"then return os.run(_ENV,path,...)end
+  error("Cannot launch "..path..": no shell or os.run API")
+end
 local function urlEncode(value)
   return(tostring(value):gsub("([^%w%-_%.~])",function(character)return string.format("%%%02X",character:byte())end))
 end
@@ -307,7 +312,7 @@ if flag("--self-test")then
 end
 if flag("--recovery")then
   if not fs.exists("/recovery.lua")then error("Recovery environment is not installed")end
-  shell.run("recovery.lua");return
+  runProgram("/recovery.lua");return
 end
 if flag("--uninstall")then uninstall();return end
 print("CookieOS Installer")
@@ -323,5 +328,5 @@ local manifest,fetch=loadManifest();local releaseKey=verifyManifest(manifest)
 if releaseKey then config.update={signingKey=releaseKey}end
 print("Installing CookieOS "..manifest.version);stage(manifest,fetch);apply(manifest);saveConfig(config);installStartup()
 print("Installation complete for node "..config.node..".")
-if not config.pairing and yes("Pair this node with an authority now?",false)then shell.run("pair-node.lua")end
+if not config.pairing and yes("Pair this node with an authority now?",false)then runProgram("/pair-node.lua")end
 if yes("Reboot now?",true)then os.reboot()end
