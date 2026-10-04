@@ -1,5 +1,5 @@
 {
-  "version": "3.5.0-dev.operator-apps",
+  "version": "3.4.0-dev.a8b32b7",
   "repository": "PrinceOfCookies/CookieOS",
   "ref": "cookieos-v3-rewrite",
   "bundle": "release/bundle.json",
@@ -175,5 +175,5 @@
       "sha256": "eea2e45c262c07902cb2a22328932cd81b90003663c3442c8e40660bc5541068"
     }
   ],
-  "signature": "a2cd7fff17c7b893edeea84eed909c1960a07b1072988dba4476565c15383cc5"
+  "signature": "dd15c13a57e054aa0722b5e9ac4f7baf0c2d947b78f9584ab4e52daf00c4952c"
 }
