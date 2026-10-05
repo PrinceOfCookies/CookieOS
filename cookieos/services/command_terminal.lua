@@ -9,7 +9,7 @@ function service.register(context)
     context.supervisor:add("command-terminal", function()
         if not shell or type(shell.run) ~= "function" then error("CraftOS shell API is unavailable") end
         local path = shell.path()
-        if not path:find("/programReplacements", 1, true) then shell.setPath("/programReplacements:" .. path) end
+        if not path:find("/programReplacements", 1, true) then shell.setPath("/programReplacements;" .. path) end
         term.setBackgroundColor(colors.black)
         term.setTextColor(colors.white)
         term.clear()
