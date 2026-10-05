@@ -255,17 +255,15 @@ local function wizard(roleName,existing)
     local admin,adminUser
     if type(seedUsers)=="table" then for name,user in pairs(seedUsers) do admin,adminUser=name,user;break end end
     if not admin then admin=ask("Initial administrator","admin");adminUser={clearance=5,role="Administrator",status="Active",extraPermissions={"all"}} end
-    if type(adminUser)~="table" or ((type(adminUser.password)~="string" or adminUser.password=="") and type(adminUser.credential)~="table") then
-      print("Set the Auth/core administrator password now. This is the password used by Auth terminals.")
-      local password="";local confirmation=""
-      while #password<4 or password~=confirmation do
-        while #password<4 do write("Administrator password (4+ characters): ");password=read("*")end
-        write("Confirm administrator password: ");confirmation=read("*")
-        if password~=confirmation then printError("Passwords do not match");password="";confirmation="" end
-      end
-      adminUser=adminUser or {clearance=5,role="Administrator",status="Active",extraPermissions={"all"}}
-      adminUser.password=password
+    print("Set the Auth/core administrator password now. This is the password used by Auth terminals.")
+    local password="";local confirmation=""
+    while #password<4 or password~=confirmation do
+      while #password<4 do write("Administrator password (4+ characters): ");password=read("*")end
+      write("Confirm administrator password: ");confirmation=read("*")
+      if password~=confirmation then printError("Passwords do not match");password="";confirmation="" end
     end
+    adminUser=adminUser or {clearance=5,role="Administrator",status="Active",extraPermissions={"all"}}
+    adminUser.password=password
     config.auth=config.auth or {delegates={}}
     config.auth.seedUsers=seedUsers or {}
     config.auth.seedUsers[admin]=adminUser
