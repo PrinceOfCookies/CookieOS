@@ -1,5 +1,5 @@
 {
-  "version": "3.4.0-dev.cf00df8",
+  "version": "3.4.0-dev.cookiesecurity-guide",
   "repository": "PrinceOfCookies/CookieOS",
   "ref": "cookieos-v3-rewrite",
   "bundle": "release/bundle.json",
@@ -87,7 +87,7 @@
     {
       "path": "/cookieos/services/personnel_display.lua",
       "source": "release/packages/cookieos/services/personnel_display.lua",
-      "sha256": "109e01d9ba40f470753ade739351cb16cdc71ad79905443005ad3adfa5872808"
+      "sha256": "f9e438182985892317c62fc3c2edccf52be25c833f8d7822baa53cfd15cb1dc2"
     },
     {
       "path": "/cookieos/services/personnel.lua",
@@ -150,5 +150,5 @@
       "sha256": "eea2e45c262c07902cb2a22328932cd81b90003663c3442c8e40660bc5541068"
     }
   ],
-  "signature": "6ee15d51a8311cc6009aefb9153f1444174b2384cfceb6332511528a1984c121"
+  "signature": "c605666c22b760c1438e526e512a7aefe87b21d042655cecfeacb6f390b3c601"
 }

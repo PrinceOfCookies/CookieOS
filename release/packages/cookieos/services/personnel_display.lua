@@ -15,7 +15,7 @@ function service.register(context)
         local users = context.personnel.list(options.filter or "all")
         local width, height = monitor.getSize()
         Ui.clear(monitor)
-        Ui.header(monitor, "SUBTERRA PERSONNEL", colors.red)
+        Ui.header(monitor, "COOKIESECURITY PERSONNEL", colors.red)
         Ui.center(monitor, 3, tostring(#users) .. " registered users", colors.lime)
         local y = 5
         for _, user in ipairs(users) do

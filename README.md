@@ -5,7 +5,8 @@
 
 Use the single guided `install.lua` for fresh installs, upgrades, repairs,
 reconfiguration, offline disks, recovery, and uninstall. See the
-[installation guide](docs/installation.md).
+[complete setup guide](docs/setup-guide.md) or the
+[installer reference](docs/installation.md).
 
 Because the GitHub API returns base64 JSON, download and decode the installer once:
 
@@ -15,6 +16,13 @@ local r=assert(http.get("https://api.github.com/repos/PrinceOfCookies/CookieOS/c
 exit()
 install.lua
 ```
+
+## Original CookieOS and the v3 rewrite
+
+The original CookieOS remains on `main`. The distributed rewrite is developed and
+published from `cookieos-v3-rewrite`. Its installer currently provides the v3 runtime,
+not a finished port of the original graphical shell; see the setup guide for the exact
+preservation and startup behavior.
 
 ## CookieOS v3 preview
 

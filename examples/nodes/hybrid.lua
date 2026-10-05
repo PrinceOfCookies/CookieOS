@@ -1,6 +1,6 @@
 return {
     version = 3,
-    node = "subterra-core-01",
+    node = "cookiesecurity-core-01",
     mode = "hybrid",
     location = "Server Room",
 
