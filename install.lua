@@ -169,10 +169,10 @@ local function detect()
 end
 local presets={
   {name="Terminal client",mode="client",services={"node","terminal"}},
-  {name="Auth/core server",mode="server",services={"node","auth","audit","events","personnel","security","maintenance","pairing"}},
+  {name="Auth/core server",mode="server",services={"node","auth","audit","events","personnel","security","maintenance","pairing","terminal"}},
   {name="Player tracker",mode="server",services={"node","player-tracker","maintenance"},requires="player_detector"},
   {name="Relay",mode="relay",services={"node"}},
-  {name="Hybrid core + relay",mode="hybrid",services={"node","auth","audit","events","personnel","security","maintenance","pairing"}},
+  {name="Hybrid core + relay",mode="hybrid",services={"node","auth","audit","events","personnel","security","maintenance","pairing","terminal"}},
   {name="Custom node",mode="client",services={"node"}},
 }
 local function randomKey(node)return sha256(node..":"..os.epoch("utc")..":"..math.random()..":"..math.random())end

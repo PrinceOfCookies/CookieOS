@@ -18,7 +18,8 @@ Do not replace the existing startup path until the node has successfully joined 
 network. Runtime messages are written to `/cookieos-data/runtime.log`.
 
 For a dedicated authority node, start from `examples/nodes/auth-server.lua`. Change
-its seed administrator and `trustedNodes` mappings before first boot.
+its seed administrator before first boot. Its local terminal is the bootstrap console:
+run `login <administrator>` and then `paircode` there before enrolling remote nodes.
 
 For a two-segment relay, start from `examples/nodes/relay.lua`. Modems on both sides
 must be present before boot; a missing configured modem intentionally fails the

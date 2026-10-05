@@ -17,7 +17,10 @@ return {
         "personnel",
         "security",
         "maintenance",
+        "pairing",
+        "terminal",
     },
+    pairing = { authority = true, side = "back", codeSeconds = 120 },
 
     auth = {
         dataPath = "/cookieos-data/users.db",

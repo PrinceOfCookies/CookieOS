@@ -23,6 +23,7 @@ return {
         "security",
         "maintenance",
         "pairing",
+        "terminal",
     },
     auth = {
         dataPath = "/cookieos-data/users.db",

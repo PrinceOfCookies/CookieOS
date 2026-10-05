@@ -3,10 +3,11 @@
 ## Pairing
 
 Run the `pairing` service only on the authority node and set `pairing.authority = true`.
-The authority creates the code; the new node does not choose one. From an authenticated
-administrator terminal connected to the authority, run `paircode`. It prints a
-16-character, one-use code. On the new computer, configure a unique `identity.nodeKey`,
-then run:
+The authority creates the code; the new node does not choose one. Authority and hybrid
+install presets include a local `terminal` service specifically to bootstrap pairing.
+On the authority computer itself, run `login <administrator>`, then `paircode`. No node
+pairing is required for this local console. It prints a 16-character, one-use code. On
+the new computer, configure a unique `identity.nodeKey`, then run:
 
 ```text
 pair-node.lua

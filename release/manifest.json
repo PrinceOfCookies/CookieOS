@@ -1,5 +1,5 @@
 {
-  "version": "3.4.0-dev.025e7f9",
+  "version": "3.4.0-dev.bootstrap-terminal",
   "repository": "PrinceOfCookies/CookieOS",
   "ref": "cookieos-v3-rewrite",
   "bundle": "release/bundle.json",
@@ -132,7 +132,7 @@
     {
       "path": "/install.lua",
       "source": "release/packages/install.lua",
-      "sha256": "439cf600941e21e676465265df2b9f1176e0955202e69ac18d4a59cf9ab93232"
+      "sha256": "053443563683c9d22cab2a595ecc25c7793f293429c0351e1de5128c32aded70"
     },
     {
       "path": "/pair-node.lua",
@@ -150,5 +150,5 @@
       "sha256": "eea2e45c262c07902cb2a22328932cd81b90003663c3442c8e40660bc5541068"
     }
   ],
-  "signature": "f18e6479a81dd6d00186bc058cfa815de363d6d6bce8ec00594de7a43e9e504e"
+  "signature": "fd874610fc0688d3b31fdb09e52b61c1102404b29786f1da270bdac947b71a9b"
 }
