@@ -80,6 +80,17 @@ function service.register(context)
             local ok, players = pcall(detector.getOnlinePlayers)
             if ok and type(players) == "table" then details.onlinePlayers = players else details.onlinePlayersError = tostring(players) end
         end
+        details.onlinePositions = {}
+        if type(details.onlinePlayers) == "table" and detector.getPlayerPos then
+            for _, playerName in pairs(details.onlinePlayers) do
+                local posOk, player = pcall(detector.getPlayerPos, playerName)
+                if posOk and type(player) == "table" then
+                    details.onlinePositions[#details.onlinePositions + 1] = tostring(playerName) .. "=" .. tostring(player.x) .. "," .. tostring(player.y) .. "," .. tostring(player.z)
+                else
+                    details.onlinePositions[#details.onlinePositions + 1] = tostring(playerName) .. "=?"
+                end
+            end
+        end
         if username and detector.getPlayerPos then
             local ok, player = pcall(detector.getPlayerPos, username)
             if ok and type(player) == "table" then details.player = player else details.playerError = tostring(player) end
@@ -96,11 +107,13 @@ function service.register(context)
         if details.player then parts[#parts + 1] = "player=" .. tostring(details.player.x) .. "," .. tostring(details.player.y) .. "," .. tostring(details.player.z) .. " dimension=" .. tostring(details.player.dimension or "unknown") end
         if details.playerError then parts[#parts + 1] = "player lookup=" .. details.playerError end
         if details.playerLookups and #details.playerLookups > 0 then parts[#parts + 1] = "lookups=" .. table.concat(details.playerLookups, ",") end
+        if details.rangeCheck then parts[#parts + 1] = "detectorRange=" .. tostring(details.rangeCheck) end
         if details.onlinePlayers then
             local names = {}
-            for _, name in ipairs(details.onlinePlayers) do names[#names + 1] = tostring(name) end
+            for _, name in pairs(details.onlinePlayers) do names[#names + 1] = tostring(name) end
             parts[#parts + 1] = "online=" .. table.concat(names, ",")
         end
+        if details.onlinePositions and #details.onlinePositions > 0 then parts[#parts + 1] = "onlinePos=" .. table.concat(details.onlinePositions, ",") end
         return table.concat(parts, " | ")
     end
 
@@ -131,7 +144,13 @@ function service.register(context)
                 end
             end
         end
-        if not ok or type(player) ~= "table" then return nil, "Configured CL6 player is listed but its coordinates could not be read from the detector. " .. diagnosticText(details), details end
+        if not ok or type(player) ~= "table" then
+            local rangeOk, inRange = false, false
+            if detector.isPlayersInRange then rangeOk, inRange = pcall(detector.isPlayersInRange, tonumber(options.radius) or 6, lookupName) end
+            details.rangeCheck = rangeOk and tostring(inRange) or "error"
+            if rangeOk and inRange then return true, nil, details end
+            return nil, "Configured CL6 player is listed but its coordinates could not be read from the detector. " .. diagnosticText(details), details
+        end
         details.player = player
         local px, py, pz = tonumber(player.x), tonumber(player.y), tonumber(player.z)
         if not px or not py or not pz then return nil, "Detector returned no usable player coordinates. " .. diagnosticText(details), details end
