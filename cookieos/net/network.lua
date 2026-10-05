@@ -84,6 +84,7 @@ function Network:send(kind, fields)
     fields.ttl = fields.ttl or self.config.network.ttl
     if kind == "request" then
         local logger = self.config.networkLogger and self.config.networkLogger.node
+        if not logger then logger = self:resolve("network.log") end
         local command = self.config.commandAuthority or {}
         local commandSource = command.authority or self.config.node == command.node
         for _, node in ipairs(command.peers or {}) do if self.config.node == node then commandSource = true end end
