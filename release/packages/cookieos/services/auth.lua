@@ -33,6 +33,8 @@ local defaultPermissions = {
     ["personnel.view"] = 1,
     ["pairing.manage"] = 5,
     ["updates.manage"] = 5,
+    ["command.access"] = 6,
+    ["command.override"] = 6,
 }
 
 local function copy(value)
@@ -50,7 +52,7 @@ local function clearance(value)
     local cleaned = tostring(value or ""):upper():gsub("^CL", "")
     local parsed = tonumber(cleaned)
     if not parsed then return nil end
-    return math.max(0, math.min(5, math.floor(parsed)))
+    return math.max(0, math.min(6, math.floor(parsed)))
 end
 
 local function normalizeUser(user)
@@ -74,6 +76,19 @@ function service.register(context)
     local loginFailures = {}
     local permissions = copy(defaultPermissions)
     for name, required in pairs(options.permissions or {}) do permissions[name] = required end
+
+    local function commandUnlocked()
+        local command = context.config.commandAuthority or {}
+        if not command.required then return true end
+        local response = context.network:request("command.status", {}, 2)
+        if not response or not response.ok then return nil, "Command Authority unavailable; facility access is locked" end
+        if response.data.authority ~= command.node then return nil, "Unexpected Command Authority identity" end
+        if response.data.locked then
+            for token in pairs(sessions) do sessions[token] = nil end
+            return nil, "GLOBAL LOCKDOWN: " .. tostring(response.data.reason or "Command authentication failure")
+        end
+        return true
+    end
 
     local function audit(action, fields)
         if context.audit then context.audit.write(action, fields) end
@@ -202,6 +217,8 @@ function service.register(context)
     end
 
     local function authorizeCall(payload, packet, permission)
+        local unlocked, lockdownReason = commandUnlocked()
+        if not unlocked then return nil, lockdownReason end
         local actor = caller(payload, packet)
         if not actor or actor == "" then return nil, "Untrusted or missing actor identity" end
         local allowed, details = check(actor, permission)
@@ -240,6 +257,8 @@ function service.register(context)
             return allowed, details.reason, details
         end,
         authorizeRequest = function(payload, packet, permission)
+            local unlocked, lockdownReason = commandUnlocked()
+            if not unlocked then return false, lockdownReason end
             local actor = caller(payload, packet)
             if not actor or actor == "" then return false, "Untrusted or missing actor identity" end
             local allowed, details = check(actor, permission)
@@ -263,6 +282,8 @@ function service.register(context)
     end)
 
     context.network:provide("auth.session.challenge", function(payload, packet)
+        local unlocked, lockdownReason = commandUnlocked()
+        if not unlocked then return nil, lockdownReason end
         local now = os.epoch("utc")
         local challengeCount = 0
         for nonce, challenge in pairs(challenges) do

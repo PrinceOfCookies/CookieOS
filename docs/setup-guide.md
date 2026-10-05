@@ -16,48 +16,59 @@ install.lua
 The release file embeds every required package. A normal fresh install does not make
 additional GitHub API requests.
 
-## 2. Install the CookieSecurity authority
+## 2. Install the Command Authority first
+
+Choose **Command Authority** on a computer with a speaker, player detector, and modem.
+The installer requires the CL6 Minecraft username, a normal password, a different
+emergency override password, and a GPS or explicitly entered physical position.
+
+After boot, the configured player must be within the chosen radius and enter the CL6
+password before the unrestricted local shell opens. Run `command-enroll` in that shell
+to generate a one-use enrollment code for the Auth server or any later node.
+
+One failed username, password, location, or proximity factor immediately locks all
+CookieSecurity authentication. Recovery is possible only at this computer with the
+nearby configured player and the separate override password.
+
+## 3. Install the CookieSecurity Auth manager
 
 Choose **Auth/core server** (or **Hybrid core + relay**), give it a recognizable node
 name such as `cookiesecurity-authority`, select the modem side, and create the initial
 administrator. The authority preset includes a local terminal specifically for
 bootstrapping other nodes.
 
-After reboot, use the authority computer itself:
+During setup, enter the Command Authority node name. Run `command-enroll` at Command
+when the Auth installer asks to enroll. After reboot, use the Auth computer itself:
 
 ```text
 login admin
-paircode
 ```
 
-Replace `admin` with the administrator name chosen during installation. The authority
-prints a 16-character, one-use code valid for about two minutes. The new node never
-creates its own pairing code.
+Replace `admin` with the administrator name chosen during installation. Auth manages
+ordinary CL0-CL5 users and sessions. It cannot grant CL6 Command access.
 
-## 3. Install and pair a terminal
+## 4. Install and enroll a terminal
 
 Run the same installer on another computer and choose **Auth terminal**. Use a clear
-node name such as `security-desk-01`. When asked to pair, first run `paircode` on the
-logged-in authority console, then enter that code on the terminal.
+node name such as `security-desk-01`. When asked to enroll, run `command-enroll` from
+the physically authenticated Command shell, then enter that code on the terminal.
 
-After pairing succeeds, reboot the terminal and log in:
+After enrollment succeeds, reboot the terminal and log in:
 
 ```text
 login admin
 ```
 
-Pairing establishes node trust. Login establishes a user session. Both are required:
-pairing a computer does not automatically log a person in.
+Command enrollment establishes node trust. Login establishes an Auth user session.
+Both are required: enrolling a computer does not automatically log a person in.
 
-### Command terminals
+### Command access
 
-Choose **Command terminal** only for physically trusted computers. It opens an
-unrestricted local CraftOS shell, including `ls`, `edit`, `delete`, `copy`, and normal
-program execution. It does not provide remote filesystem control; anyone at that
-computer can alter its local files. Use an **Auth terminal** for ordinary security
-operators and reserve command terminals for system administration.
+There is one Command Authority. Its unrestricted CraftOS shell includes `ls`, `edit`,
+`delete`, `copy`, and normal program execution, but opens only after CL6 password and
+physical-player verification. It does not provide remote filesystem control.
 
-## 4. Create non-administrator logins
+## 5. Create non-administrator logins
 
 From a logged-in administrator terminal:
 
@@ -76,7 +87,7 @@ userdel operator
 List accounts with `users`, inspect one with `whois <user>`, and change a password
 with `passwd <user>`.
 
-## 5. Terminal help and monitors
+## 6. Terminal help and monitors
 
 Use `help` for the command list. If the computer has an attached monitor, use:
 
@@ -86,7 +97,7 @@ help monitor
 
 CookieOS finds the first attached monitor and leaves the complete command list on it.
 
-## 6. Add other node types
+## 7. Add other node types
 
 - **Relay** forwards packets between attached modem segments and does not host Auth.
 - **Player tracker** requires a `player_detector` peripheral.
@@ -99,15 +110,15 @@ CookieOS finds the first attached monitor and leaves the complete command list o
 Give every computer a unique node name. The suggested `cookieos-NUMBER` uses the
 ComputerCraft computer ID only as a convenient default and can be replaced.
 
-Pair every non-authority node using a fresh authority-generated code. Codes expire
+Enroll every non-Command node using a fresh Command-generated code. Codes expire
 and cannot be reused.
 
-From a command terminal, run `cookiesecurity` for local configuration, pairing,
+From the Command Authority, run `cookiesecurity` for local configuration, enrollment,
 recovery, logs, and shell shortcuts. Speaker controls from an Auth terminal are
 `sound [Minecraft sound]`, `alarm [count]`, and `audiostop`; use `chat <message>` for
 the chat gateway.
 
-## 7. Updates, repairs, and reconfiguration
+## 8. Updates, repairs, and reconfiguration
 
 Keep a current `release/install.lua` available locally. Run it with:
 
@@ -123,7 +134,7 @@ Upgrade and repair preserve node configuration. Reconfigure reruns the role wiza
 Recovery can roll back an update or disable a failing service. Uninstall asks
 separately before deleting configuration or CookieOS data.
 
-## 8. Original CookieOS versus the v3 rewrite
+## 9. Original CookieOS versus the v3 rewrite
 
 The original CookieOS remains on the repository's `main` branch. The distributed v3
 work lives on `cookieos-v3-rewrite`; it has not overwritten `main`.
@@ -138,10 +149,10 @@ Do not assume the classic interface and v3 runtime are a finished dual-boot syst
 Preserve an original installation or use the `main` branch until the classic UI is
 explicitly adapted as a v3 front end.
 
-## 9. Recommended commissioning check
+## 10. Recommended commissioning check
 
-1. Boot the authority and log in locally.
-2. Generate a pairing code and pair one terminal.
+1. Boot Command and complete CL6 physical authentication.
+2. Run `command-enroll` and enroll Auth.
 3. Reboot the terminal and log in.
 4. Run `nodes`, `services`, and `security`.
 5. Create a low-clearance test account and verify its access.

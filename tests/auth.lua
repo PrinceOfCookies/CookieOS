@@ -122,4 +122,14 @@ test("session is bound to source node", function()
     assert(loggedOut.loggedOut)
 end)
 
+test("Command lockdown blocks Auth authorization", function()
+    context.config.commandAuthority = { required = true, node = "command" }
+    context.network.request = function()
+        return { ok = true, data = { authority = "command", locked = true, reason = "physical authentication failed" } }
+    end
+    local result, err = handlers["auth.users.list"]({ actor = "admin" }, { source = "terminal" })
+    assert(not result and err:find("GLOBAL LOCKDOWN", 1, true))
+    context.config.commandAuthority = nil
+end)
+
 print("All " .. passed .. " auth tests passed")

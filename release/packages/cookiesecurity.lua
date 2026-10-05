@@ -3,6 +3,8 @@ local choices = {
     { "Speaker music player", function() shell.run("/os/programs/PlayMusic") end },
     { "Edit node configuration", function() shell.run("edit", "/cookieos-node.lua") end },
     { "Pair this node", function() shell.run("/pair-node.lua") end },
+    { "Enroll a node (Command only)", function() shell.run("/command-enroll.lua") end },
+    { "Revoke a node (Command only)", function() shell.run("/command-revoke.lua") end },
     { "Offline recovery", function() shell.run("/recovery.lua") end },
     { "View runtime log", function() shell.run("edit", "/cookieos-data/runtime.log") end },
     { "Exit", function() end },

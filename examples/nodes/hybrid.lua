@@ -3,6 +3,7 @@ return {
     node = "cookiesecurity-core-01",
     mode = "hybrid",
     location = "Server Room",
+    commandAuthority = { required = true, node = "cookiesecurity-command" },
 
     transports = {
         { name = "facility", side = "back", type = "modem" },

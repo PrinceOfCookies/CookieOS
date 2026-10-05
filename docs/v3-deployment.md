@@ -1,13 +1,10 @@
 # CookieOS v3 pairing, updates, and recovery
 
-## Pairing
+## Command enrollment
 
-Run the `pairing` service only on the authority node and set `pairing.authority = true`.
-The authority creates the code; the new node does not choose one. Authority and hybrid
-install presets include a local `terminal` service specifically to bootstrap pairing.
-On the authority computer itself, run `login <administrator>`, then `paircode`. No node
-pairing is required for this local console. It prints a 16-character, one-use code. On
-the new computer, configure a unique `identity.nodeKey`, then run:
+Install the Command Authority first. After local CL6 physical authentication, run
+`command-enroll` in its shell. Command creates a 16-character, one-use code. On the
+new computer, configure a unique `identity.nodeKey`, the exact Command node name, then run:
 
 ```text
 pair-node.lua
@@ -16,8 +13,8 @@ pair-node.lua
 Enter the 16-character code. The request and response are encrypted and authenticated
 with that one-time code, which expires after two minutes by default. Both computers
 persist the resulting trust data under `/cookieos-data/trust.db`; the code cannot be
-reused. Use `revoke <node>` immediately for a lost or retired computer. Re-pairing a
-node replaces its key and acts as manual rotation.
+reused. Run `command-revoke` locally at Command for a lost or retired computer.
+Re-enrollment replaces its key and acts as manual rotation.
 
 CookieOS currently uses symmetric HMAC identities. Full-mesh operation therefore
 distributes peer verification keys to paired nodes. Pairing protects keys in transit,

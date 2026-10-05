@@ -11,6 +11,7 @@ local builtins = {
     security = "cookieos.services.security",
     terminal = "cookieos.services.terminal",
     ["command-terminal"] = "cookieos.services.command_terminal",
+    ["command-authority"] = "cookieos.services.command_authority",
     audio = "cookieos.services.audio",
     chat = "cookieos.services.chat",
     auth = "cookieos.services.auth",
@@ -86,6 +87,12 @@ end
 
 function runtime.start(configPath)
     local nodeConfig = Config.load(configPath)
+    if nodeConfig.commandAuthority.required then
+        local trusted = require("cookieos.trust").load(nodeConfig.network.trustPath)
+        if type(nodeConfig.commandAuthority.node) ~= "string" or not trusted[nodeConfig.commandAuthority.node] then
+            error("This node is not enrolled with its configured Command Authority: " .. tostring(nodeConfig.commandAuthority.node))
+        end
+    end
     Log.configure({ node = nodeConfig.node })
 
     local supervisor = Supervisor.new(Log)

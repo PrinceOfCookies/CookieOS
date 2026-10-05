@@ -1,4 +1,5 @@
 return {
+    commandAuthority = { required = true, node = "cookiesecurity-command" },
     version = 3,
     node = "command-terminal-01",
     mode = "client",

@@ -15,7 +15,7 @@ local function printHelp()
     print("  security <level>      Set GREEN/YELLOW/RED/BLACK")
     print("  whois <user>          Show an auth user")
     print("  users                 List auth users")
-    print("  useradd <user> <0-5> [role]  Create a login")
+    print("  useradd <user> <0-5> [role]  Create a normal login")
     print("  userdel <user>        Delete a login")
     print("  login [user]          Open an authenticated session")
     print("  logout                Revoke the current session")
@@ -28,8 +28,6 @@ local function printHelp()
     print("  personnel [filter]    List personnel")
     print("  psearch <query>       Search personnel")
     print("  topics                List event topics")
-    print("  paircode              Authority creates a 16-character pairing code")
-    print("  revoke <node>         Revoke a paired node")
     print("  sound [name]          Play a sound in a speaker zone")
     print("  alarm [count]         Trigger the speaker-zone alarm")
     print("  audiostop             Stop speaker playback")
@@ -74,6 +72,23 @@ end
 function service.register(context)
     local session
     local sessionUser
+    local commandState
+
+    context.network:on("event", function(packet)
+        if packet.service == "command.lockdown" and type(packet.payload) == "table"
+            and packet.source == context.config.commandAuthority.node then commandState = packet.payload end
+    end)
+
+    local function commandAllowsLogin()
+        local options = context.config.commandAuthority or {}
+        if not options.required then return true end
+        local response, err = context.network:request("command.status", {}, 2)
+        if not response or not response.ok then return nil, "Command Authority unavailable; terminal login is locked" end
+        commandState = response.data
+        if commandState.authority ~= options.node then return nil, "Unexpected Command Authority identity" end
+        if commandState.locked then return nil, "GLOBAL LOCKDOWN: " .. tostring(commandState.reason or "Command authentication failure") end
+        return true
+    end
 
     local function authorized(fields)
         fields = fields or {}
@@ -104,6 +119,9 @@ function service.register(context)
             if command == "help" then
                 if tostring(words[2] or ""):lower() == "monitor" then printHelpOnMonitor() else printHelp() end
             elseif command == "login" then
+                local loginAllowed, commandError = commandAllowsLogin()
+                if not loginAllowed then printError(commandError)
+                else
                 local username = words[2] or context.config.identity.user
                 if not username then
                     write("User: ")
@@ -130,6 +148,7 @@ function service.register(context)
                     print("Logged in as " .. sessionUser)
                 else
                     printResponse(response, err)
+                end
                 end
             elseif command == "logout" then
                 if session then printResponse(context.network:request("auth.session.logout", { session = session })) end
@@ -197,17 +216,6 @@ function service.register(context)
                 printResponse(context.network:request("personnel.search", authorized({ query = table.concat(words, " ", 2) })))
             elseif command == "topics" then
                 printResponse(context.network:request("events.topics", authorized()))
-            elseif command == "paircode" then
-                local response, err = context.network:request("pairing.begin", authorized())
-                if not response then printError(friendlyError(err or "No response"))
-                elseif not response.ok then printError(friendlyError(response.error))
-                else
-                    print("Authority-generated pairing code:")
-                    print("  " .. tostring(response.data.code))
-                    print("Enter this 16-character code on the new node. It expires in about two minutes and can be used once.")
-                end
-            elseif command == "revoke" and words[2] then
-                printResponse(context.network:request("pairing.revoke", authorized({ node = words[2] })))
             elseif command == "sound" then
                 printResponse(context.network:request("audio.sound", authorized({ sound = words[2] })))
             elseif command == "alarm" then

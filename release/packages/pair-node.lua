@@ -10,8 +10,8 @@ if not config.identity.nodeKey then error("Configure identity.nodeKey before pai
 local side = args[2] or config.transports[1].side
 if not rednet.isOpen(side) then rednet.open(side) end
 
-print("The CookieOS authority server must generate the pairing code.")
-print("On an authenticated administrator terminal, run: paircode")
+print("The CookieSecurity Command Authority must generate the enrollment code.")
+print("After local CL6 authentication at Command, run: command-enroll")
 print("Then enter the 16-character one-time code shown there.")
 local code
 while not code do
@@ -20,7 +20,7 @@ while not code do
     if #entered == 16 and not entered:find("[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]") then
         code = entered
     else
-        printError("Invalid code. Enter exactly 16 characters from the authority's paircode command.")
+        printError("Invalid code. Enter exactly 16 characters from Command's command-enroll tool.")
     end
 end
 local requestId = config.node .. ":" .. os.epoch("utc") .. ":" .. math.random()
@@ -37,6 +37,9 @@ while os.clock() - started < 10 do
         local authority = textutils.unserialize(plaintext)
         if type(authority) ~= "table" or type(authority.node) ~= "string" or type(authority.keys) ~= "table" then
             error("Invalid pairing response")
+        end
+        if config.commandAuthority.required and authority.node ~= config.commandAuthority.node then
+            error("Enrollment response came from unexpected authority " .. authority.node)
         end
         local keys = Trust.load(config.network.trustPath)
         for node, key in pairs(authority.keys) do

@@ -12,7 +12,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const output = resolve(root, outputArg);
 const includeRoots = ["cookieos"];
 const includeFiles = [
-  "cookieos-update.lua", "cookiesecurity.lua", "install.lua", "pair-node.lua", "recovery.lua", "startup-v3.lua",
+  "command-enroll.lua", "command-revoke.lua", "cookieos-update.lua", "cookiesecurity.lua", "install.lua", "pair-node.lua", "recovery.lua", "startup-v3.lua",
   "os/programs/PlayMusic",
 ];
 

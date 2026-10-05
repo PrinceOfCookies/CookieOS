@@ -37,6 +37,12 @@ local defaults = {
         loginLockSeconds = 30,
         delegates = {},
     },
+    commandAuthority = {
+        required = false,
+        node = nil,
+        radius = 6,
+        statePath = "/cookieos-data/command-authority.db",
+    },
     audit = {
         dataPath = "/cookieos-data/audit.db",
         maxEntries = 1000,
@@ -111,6 +117,17 @@ local function validate(result)
     if result.network.maxSeenPackets < 32 then error("network.maxSeenPackets is too small", 3) end
     if result.network.requireSigned and (type(result.identity.nodeKey) ~= "string" or result.identity.nodeKey == "") then
         error("identity.nodeKey is required when network.requireSigned is true", 3)
+    end
+    if result.commandAuthority.authority then
+        if type(result.commandAuthority.user) ~= "string" or result.commandAuthority.user == "" then error("Command Authority requires a CL6 Minecraft username", 3) end
+        if type(result.commandAuthority.credential) ~= "table" or type(result.commandAuthority.overrideCredential) ~= "table" then
+            error("Command Authority requires normal and override credentials", 3)
+        end
+        if result.commandAuthority.credential.hash == result.commandAuthority.overrideCredential.hash then
+            error("Command Authority credentials must be different", 3)
+        end
+    elseif result.commandAuthority.required and (type(result.commandAuthority.node) ~= "string" or result.commandAuthority.node == "") then
+        error("Command Authority node name is required", 3)
     end
 
     local names = {}

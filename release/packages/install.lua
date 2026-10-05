@@ -169,13 +169,13 @@ local function detect()
 end
 local presets={
   {name="Auth terminal",mode="client",services={"node","terminal"}},
-  {name="Command terminal",mode="client",services={"node","command-terminal"}},
-  {name="Auth/core server",mode="server",services={"node","auth","audit","events","personnel","security","maintenance","pairing","terminal"}},
+  {name="Command Authority",mode="server",services={"node","command-authority","command-terminal"},requires={"speaker","playerDetector"}},
+  {name="Auth/core server",mode="server",services={"node","auth","audit","events","personnel","security","maintenance","terminal"}},
   {name="Player tracker",mode="server",services={"node","player-tracker","maintenance"},requires="player_detector"},
   {name="Speaker zone",mode="server",services={"node","audio","maintenance"},requires="speaker"},
   {name="Chat gateway",mode="server",services={"node","chat","maintenance"},requires="chatBox"},
   {name="Relay",mode="relay",services={"node"}},
-  {name="Hybrid core + relay",mode="hybrid",services={"node","auth","audit","events","personnel","security","maintenance","pairing","terminal"}},
+  {name="Hybrid core + relay",mode="hybrid",services={"node","auth","audit","events","personnel","security","maintenance","terminal"}},
   {name="Custom node",mode="client",services={"node"}},
 }
 local function randomKey(node)return sha256(node..":"..os.epoch("utc")..":"..math.random()..":"..math.random())end
@@ -183,7 +183,9 @@ local function wizard(roleName,existing)
   local found=detect();local selected
   if roleName then for _,preset in ipairs(presets)do if preset.name:lower():find(roleName:lower(),1,true)then selected=preset end end end
   if not selected then selected=presets[choose("Choose this computer's role:",(function()local names={}for _,p in ipairs(presets)do table.insert(names,p.name)end return names end)())]end
-  if selected.requires and not found[selected.requires]then printError("Warning: role requires "..selected.requires)end
+  if selected.requires then for _,required in ipairs(type(selected.requires)=="table"and selected.requires or{selected.requires})do
+    if not found[required]and not(required=="playerDetector"and found.player_detector)then printError("Warning: role requires "..required)end
+  end end
   local node=ask("Unique node name",existing and existing.node or("cookieos-"..os.getComputerID()))
   local location=ask("Facility location",existing and existing.location or"Unknown")
   local modemNames=found.modem or{}
@@ -198,23 +200,49 @@ local function wizard(roleName,existing)
   local config={version=3,node=node,mode=selected.mode,location=location,identity={nodeKey=existing and existing.identity and existing.identity.nodeKey or randomKey(node)},transports=transports,services=selected.services}
   if existing then
     config.network=existing.network;config.update=existing.update;config.auth=existing.auth
-    config.pairing=existing.pairing;config.events=existing.events
+    config.pairing=existing.pairing;config.events=existing.events;config.commandAuthority=existing.commandAuthority
     if existing.identity and existing.identity.user then config.identity.user=existing.identity.user end
   end
-  if selected.name:find("Auth",1,true)or selected.name:find("Hybrid",1,true)then
+  local isAuthority=selected.name=="Auth/core server"or selected.name=="Hybrid core + relay"
+  local isCommand=selected.name=="Command Authority"
+  if isCommand then
+    local user=ask("CL6 Minecraft username")
+    local password,override="",""
+    while #password<8 do write("CL6 password (8+ characters): ");password=read("*")end
+    while #override<8 or override==password do
+      write("Different emergency override password (8+ characters): ");override=read("*")
+      if override==password then printError("Override password must differ from the normal password")end
+    end
+    local function credential(secret,label)
+      local salt=sha256(node..":"..label..":"..os.epoch("utc")..":"..math.random())
+      local value=salt..":"..secret;for _=1,64 do value=sha256(value..":"..salt)end
+      return{salt=salt,rounds=64,hash=value}
+    end
+    local position
+    if gps and gps.locate then local x,y,z=gps.locate(2,false);if x then position={x=x,y=y,z=z}end end
+    if not position then
+      print("GPS location unavailable; enter this computer's coordinates.")
+      position={x=tonumber(ask("X")),y=tonumber(ask("Y")),z=tonumber(ask("Z"))}
+      if not position.x or not position.y or not position.z then error("Valid Command Authority coordinates are required")end
+    end
+    config.commandAuthority={authority=true,user=user,radius=tonumber(ask("Physical access radius","6"))or 6,
+      position=position,credential=credential(password,"normal"),overrideCredential=credential(override,"override")}
+  elseif isAuthority then
     if not config.auth then
       local admin=ask("Initial administrator","admin")
       local password="";while #password<4 do write("Initial administrator password (4+ characters): ");password=read("*")end
       config.auth={seedUsers={[admin]={clearance=5,role="Administrator",status="Active",extraPermissions={"all"},password=password}},delegates={}}
     end
-    config.pairing=config.pairing or{authority=true,side=sides[1]}
     config.events=config.events or{publishers={}}
+    config.commandAuthority=config.commandAuthority or{required=true,node=ask("Command Authority node name","cookiesecurity-command")}
   else
     config.identity.user=ask("Default username (login can override)","admin")
+    config.commandAuthority=config.commandAuthority or{required=true,node=ask("Command Authority node name","cookiesecurity-command")}
   end
-  if found.monitor and (selected.name:find("Auth",1,true)or selected.name:find("Hybrid",1,true))and yes("Enable personnel monitor display?",false)then
+  if found.monitor and isAuthority and yes("Enable personnel monitor display?",false)then
     table.insert(config.services,"personnel-display");config.personnelDisplay={side=found.monitor[1],textScale=0.5}
   end
+  if not isCommand and flag("--reconfigure")then config.pairing=nil end
   return config
 end
 local function saveConfig(config)
@@ -326,10 +354,21 @@ if fs.exists(CONFIG_PATH)then local chunk=loadfile(CONFIG_PATH);if chunk then lo
 local config
 if (flag("--upgrade")or flag("--repair"))and existing then config=existing
 else config=wizard(option("--role"),existing)end
-if flag("--reconfigure")then saveConfig(config);print("Configuration updated. Reboot to apply.");return end
+if (flag("--upgrade")or flag("--repair"))and not config.commandAuthority then
+  error("This pre-Command CookieSecurity configuration must be migrated with install.lua --reconfigure before upgrade")
+end
+if flag("--reconfigure")then
+  saveConfig(config)
+  if config.commandAuthority and config.commandAuthority.required then
+    print("Command Authority enrollment is required before this node can boot.");runProgram("/pair-node.lua")
+  end
+  print("Configuration updated. Reboot to apply.");return
+end
 local manifest,fetch=loadManifest();local releaseKey=verifyManifest(manifest)
 if releaseKey then config.update={signingKey=releaseKey}end
 print("Installing CookieOS "..manifest.version);stage(manifest,fetch);apply(manifest);saveConfig(config);installStartup()
 print("Installation complete for node "..config.node..".")
-if not config.pairing and yes("Pair this node with an authority now?",false)then runProgram("/pair-node.lua")end
+if config.commandAuthority and config.commandAuthority.required then
+  print("Command Authority enrollment is required before this node can boot.");runProgram("/pair-node.lua")
+end
 if yes("Reboot now?",true)then os.reboot()end

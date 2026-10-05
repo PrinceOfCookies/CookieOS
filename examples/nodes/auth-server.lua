@@ -4,6 +4,7 @@ return {
     mode = "server",
     location = "Server Room",
     identity = { nodeKey = "replace-with-the-auth-server-key" },
+    commandAuthority = { required = true, node = "cookiesecurity-command" },
     network = {
         requireSigned = true,
         trustedKeys = {

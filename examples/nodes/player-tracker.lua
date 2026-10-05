@@ -1,4 +1,5 @@
 return {
+    commandAuthority = { required = true, node = "cookiesecurity-command" },
     version = 3,
     node = "player-tracker-01",
     mode = "server",

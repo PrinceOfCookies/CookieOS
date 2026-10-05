@@ -17,9 +17,9 @@ shell.run("startup-v3.lua")
 Do not replace the existing startup path until the node has successfully joined the
 network. Runtime messages are written to `/cookieos-data/runtime.log`.
 
-For a dedicated authority node, start from `examples/nodes/auth-server.lua`. Change
-its seed administrator before first boot. Its local terminal is the bootstrap console:
-run `login <administrator>` and then `paircode` there before enrolling remote nodes.
+Install the Command Authority before using the dedicated Auth example. Physically
+authenticate at Command and run `command-enroll`, then enroll the Auth node with the
+one-use code before its first boot.
 
 For a two-segment relay, start from `examples/nodes/relay.lua`. Modems on both sides
 must be present before boot; a missing configured modem intentionally fails the
