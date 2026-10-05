@@ -88,7 +88,13 @@ function Network:send(kind, fields)
         local command = self.config.commandAuthority or {}
         local commandSource = command.authority or self.config.node == command.node
         for _, node in ipairs(command.peers or {}) do if self.config.node == node then commandSource = true end end
-        if logger and logger ~= self.config.node and not commandSource then fields.nextHop = logger end
+        local loggerRoute = logger and self.routes[logger]
+        local targetRoute = fields.destination and self.routes[fields.destination]
+        if logger and logger ~= self.config.node and not commandSource
+            and loggerRoute and loggerRoute.features and loggerRoute.features.loggerRouting
+            and fields.destination and targetRoute and targetRoute.features and targetRoute.features.loggerRouting then
+            fields.nextHop = logger
+        end
     end
     local packet = Envelope.new(self.config.node, kind, fields)
     if self.config.identity.nodeKey then Envelope.sign(packet, self.config.identity.nodeKey) end
@@ -118,6 +124,7 @@ function Network:announce()
         mode = self.config.mode,
         location = self.config.location,
         services = self:localServices(),
+        features = { loggerRouting = true },
     } })
 end
 
@@ -246,6 +253,7 @@ function Network:dispatch(packet)
         self.routes[packet.source] = {
             seenAt = os.clock(), mode = packet.payload.mode, location = packet.payload.location,
             services = packet.payload.services or {}, apiMin = packet.payload.apiMin, apiMax = packet.payload.apiMax,
+            features = packet.payload.features or {},
             signed = packet.payload.signed == true,
             failures = self.routes[packet.source] and self.routes[packet.source].failures or 0,
         }
