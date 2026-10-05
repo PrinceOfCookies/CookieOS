@@ -248,11 +248,24 @@ local function wizard(roleName,existing)
     for peer in peers:gmatch("[^,%s]+")do table.insert(config.commandCluster.peers,peer)end
     if #config.commandCluster.peers>0 then config.commandCluster.quorum=tonumber(ask("Required authority quorum","1"))or 1 end
   elseif isAuthority then
-    if not config.auth or type(config.auth.seedUsers) ~= "table" or next(config.auth.seedUsers) == nil then
-      local admin=ask("Initial administrator","admin")
-      local password="";while #password<4 do write("Initial administrator password (4+ characters): ");password=read("*")end
-      config.auth={seedUsers={[admin]={clearance=5,role="Administrator",status="Active",extraPermissions={"all"},password=password}},delegates={}}
+    local seedUsers=config.auth and config.auth.seedUsers
+    local admin,adminUser
+    if type(seedUsers)=="table" then for name,user in pairs(seedUsers) do admin,adminUser=name,user;break end end
+    if not admin then admin=ask("Initial administrator","admin");adminUser={clearance=5,role="Administrator",status="Active",extraPermissions={"all"}} end
+    if type(adminUser)~="table" or ((type(adminUser.password)~="string" or adminUser.password=="") and type(adminUser.credential)~="table") then
+      print("Set the Auth/core administrator password now. This is the password used by Auth terminals.")
+      local password="";local confirmation=""
+      while #password<4 or password~=confirmation do
+        while #password<4 do write("Administrator password (4+ characters): ");password=read("*")end
+        write("Confirm administrator password: ");confirmation=read("*")
+        if password~=confirmation then printError("Passwords do not match");password="";confirmation="" end
+      end
+      adminUser=adminUser or {clearance=5,role="Administrator",status="Active",extraPermissions={"all"}}
+      adminUser.password=password
     end
+    config.auth=config.auth or {delegates={}}
+    config.auth.seedUsers=seedUsers or {}
+    config.auth.seedUsers[admin]=adminUser
     config.events=config.events or{publishers={}}
     print("The next value must exactly match the Command Authority computer's Unique node name.")
     config.commandAuthority=config.commandAuthority or{required=true,node=ask("Primary Command Authority node name","cookiesecurity-command")}
