@@ -22,6 +22,8 @@ local builtins = {
     personnel = "cookieos.services.personnel",
     ["personnel-display"] = "cookieos.services.personnel_display",
     pairing = "cookieos.services.pairing",
+    operations = "cookieos.services.operations",
+    ["fleet-agent"] = "cookieos.services.fleet_agent",
 }
 
 local function resolveService(name)
@@ -89,9 +91,12 @@ function runtime.start(configPath)
     local nodeConfig = Config.load(configPath)
     if nodeConfig.commandAuthority.required then
         local trusted = require("cookieos.trust").load(nodeConfig.network.trustPath)
-        if type(nodeConfig.commandAuthority.node) ~= "string" or not trusted[nodeConfig.commandAuthority.node] then
-            error("This node is not enrolled with its configured Command Authority: " .. tostring(nodeConfig.commandAuthority.node))
-        end
+        local authorities = { nodeConfig.commandAuthority.node }
+        for _, peer in ipairs(nodeConfig.commandAuthority.peers or {}) do authorities[#authorities + 1] = peer end
+        local enrolled = 0
+        for _, authority in ipairs(authorities) do if type(authority) == "string" and trusted[authority] then enrolled = enrolled + 1 end end
+        local quorum = math.max(1, tonumber(nodeConfig.commandAuthority.quorum) or 1)
+        if enrolled < quorum then error("This node is enrolled with " .. enrolled .. " Command Authorities but requires quorum " .. quorum) end
     end
     Log.configure({ node = nodeConfig.node })
 

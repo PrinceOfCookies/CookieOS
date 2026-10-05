@@ -33,6 +33,18 @@ local defaultPermissions = {
     ["personnel.view"] = 1,
     ["pairing.manage"] = 5,
     ["updates.manage"] = 5,
+    ["updates.view"] = 3,
+    ["operations.view"] = 2,
+    ["incidents.view"] = 2,
+    ["incidents.manage"] = 4,
+    ["automation.view"] = 3,
+    ["automation.manage"] = 5,
+    ["access.view"] = 2,
+    ["access.use"] = 1,
+    ["access.manage"] = 4,
+    ["map.view"] = 1,
+    ["map.manage"] = 4,
+    ["announcements.send"] = 3,
     ["command.access"] = 6,
     ["command.override"] = 6,
 }
@@ -80,13 +92,24 @@ function service.register(context)
     local function commandUnlocked()
         local command = context.config.commandAuthority or {}
         if not command.required then return true end
-        local response = context.network:request("command.status", {}, 2)
-        if not response or not response.ok then return nil, "Command Authority unavailable; facility access is locked" end
-        if response.data.authority ~= command.node then return nil, "Unexpected Command Authority identity" end
-        if response.data.locked then
-            for token in pairs(sessions) do sessions[token] = nil end
-            return nil, "GLOBAL LOCKDOWN: " .. tostring(response.data.reason or "Command authentication failure")
+        local authorities = { command.node }
+        for _, peer in ipairs(command.peers or {}) do if peer ~= command.node then authorities[#authorities + 1] = peer end end
+        local available, unlocked = 0, 0
+        for _, authority in ipairs(authorities) do
+            local response
+            if context.network.requestTo then response = context.network:requestTo(authority, "command.status", {}, 2)
+            else response = context.network:request("command.status", {}, 2) end
+            if response and response.ok and response.data.authority == authority then
+                available = available + 1
+                if response.data.locked then
+                    for token in pairs(sessions) do sessions[token] = nil end
+                    return nil, "GLOBAL LOCKDOWN: " .. tostring(response.data.reason or "Command authentication failure")
+                end
+                unlocked = unlocked + 1
+            end
         end
+        local quorum = math.max(1, tonumber(command.quorum) or 1)
+        if available < quorum or unlocked < quorum then return nil, "Command Authority quorum unavailable; facility access is locked" end
         return true
     end
 

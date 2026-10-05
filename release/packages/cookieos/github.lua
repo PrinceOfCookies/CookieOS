@@ -51,6 +51,10 @@ local function decodeBase64(value)
         output[#output + 1] = string.char(math.floor(combined / 65536) % 256)
         if c ~= "=" then output[#output + 1] = string.char(math.floor(combined / 256) % 256) end
         if d ~= "=" then output[#output + 1] = string.char(combined % 256) end
+        if offset % 32768 == 1 and os.queueEvent and os.pullEvent then
+            os.queueEvent("cookieos_github_yield")
+            os.pullEvent("cookieos_github_yield")
+        end
     end
     return table.concat(output)
 end

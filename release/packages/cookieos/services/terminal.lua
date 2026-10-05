@@ -17,6 +17,8 @@ local function printHelp()
     print("  users                 List auth users")
     print("  useradd <user> <0-5> [role]  Create a normal login")
     print("  userdel <user>        Delete a login")
+    print("  permadd <user> <permission>   Grant a permission")
+    print("  permdel <user> <permission>   Revoke a permission")
     print("  login [user]          Open an authenticated session")
     print("  logout                Revoke the current session")
     print("  whoami                Show the terminal identity")
@@ -31,7 +33,23 @@ local function printHelp()
     print("  sound [name]          Play a sound in a speaker zone")
     print("  alarm [count]         Trigger the speaker-zone alarm")
     print("  audiostop             Stop speaker playback")
-    print("  chat <message>        Send through the chat gateway")
+    print("  chat [#channel] <message>     Send through the chat gateway")
+    print("  announce <normal|urgent|emergency> <message>")
+    print("  dashboard [monitor]  Operations overview")
+    print("  incidents [status]   List incidents")
+    print("  incident open <severity> <title>")
+    print("  incident update <id> <status> [note]")
+    print("  doors                List access-controlled doors")
+    print("  door <id|zone> <lock|unlock>  Control doors")
+    print("  map [monitor]        Show the editable facility map")
+    print("  room set <id> <floor> <x> <y> <w> <h> [name]")
+    print("  room remove <id>     Remove a map room")
+    print("  rules                List automation rules")
+    print("  rule run <id>        Run an automation rule")
+    print("  rule set <id> <topic> <lock|unlock|alarm> <target>")
+    print("  fleet                Show rollout plans")
+    print("  fleet status <node>  Show a node's update state")
+    print("  fleet stage <node> [ref] | apply <node> | rollback <node>")
 end
 
 local function friendlyError(message)
@@ -69,6 +87,24 @@ local function printHelpOnMonitor()
     print("Help displayed on attached monitor.")
 end
 
+local function withMonitor(draw)
+    local monitor = peripheral.find("monitor")
+    if not monitor then printError("No attached monitor was found."); return end
+    local previous = term.current()
+    local ok, err = pcall(function()
+        monitor.setTextScale(0.5); term.redirect(monitor); term.setBackgroundColor(colors.black)
+        term.setTextColor(colors.white); term.clear(); term.setCursorPos(1, 1); draw(monitor.getSize())
+    end)
+    term.redirect(previous)
+    if not ok then printError("Monitor display failed: " .. tostring(err)) end
+end
+
+local function responseData(response, err)
+    if not response then printError(friendlyError(err)); return nil end
+    if not response.ok then printError(friendlyError(response.error)); return nil end
+    return response.data
+end
+
 function service.register(context)
     local session
     local sessionUser
@@ -82,7 +118,9 @@ function service.register(context)
     local function commandAllowsLogin()
         local options = context.config.commandAuthority or {}
         if not options.required then return true end
-        local response, err = context.network:request("command.status", {}, 2)
+        local response, err
+        if context.network.requestTo then response, err = context.network:requestTo(options.node, "command.status", {}, 2)
+        else response, err = context.network:request("command.status", {}, 2) end
         if not response or not response.ok then return nil, "Command Authority unavailable; terminal login is locked" end
         commandState = response.data
         if commandState.authority ~= options.node then return nil, "Unexpected Command Authority identity" end
@@ -202,6 +240,9 @@ function service.register(context)
                         else printResponse(response, err) end
                     else print("Cancelled") end
                 end
+            elseif (command == "permadd" or command == "permdel") and words[2] and words[3] then
+                local endpoint = command == "permadd" and "auth.permission.add" or "auth.permission.remove"
+                printResponse(context.network:request(endpoint, authorized({ user = words[2], permission = words[3] })))
             elseif command == "where" and words[2] then
                 printResponse(context.network:request("players.lookup", authorized({ query = words[2] })))
             elseif command == "maint" then
@@ -223,7 +264,66 @@ function service.register(context)
             elseif command == "audiostop" then
                 printResponse(context.network:request("audio.stop", authorized()))
             elseif command == "chat" and words[2] then
-                printResponse(context.network:request("chat.send", authorized({ message = table.concat(words, " ", 2) })))
+                local channel, start = "global", 2
+                if words[2]:sub(1, 1) == "#" then channel, start = words[2]:sub(2), 3 end
+                printResponse(context.network:request("chat.send", authorized({ channel = channel, message = table.concat(words, " ", start) })))
+            elseif command == "announce" and words[2] and words[3] then
+                printResponse(context.network:request("audio.announce", authorized({ priority = words[2], message = table.concat(words, " ", 3) })))
+            elseif command == "dashboard" then
+                local response, err = context.network:request("ops.snapshot", authorized())
+                local data = responseData(response, err)
+                if data and tostring(words[2] or ""):lower() == "monitor" then withMonitor(function()
+                    print("COOKIESECURITY OPERATIONS"); print("Generated: " .. tostring(data.generatedAt)); print("")
+                    print("Nodes: " .. #data.nodes .. "  Incidents: " .. data.openIncidents .. " open")
+                    print("Doors: " .. tostring((function()local n=0 for _ in pairs(data.doors or{})do n=n+1 end return n end)()) .. "  Rooms: " .. data.rooms)
+                    print(""); for _, node in ipairs(data.nodes) do print(string.format("%-18s %-7s %3ss %s", node.node, node.mode or "?", node.age or 0, node.location or "")) end
+                end) elseif data then print(textutils.serialize(data, { compact = true })) end
+            elseif command == "incidents" then
+                printResponse(context.network:request("incident.list", authorized({ status = words[2] })))
+            elseif command == "incident" and words[2] == "open" and words[3] and words[4] then
+                printResponse(context.network:request("incident.open", authorized({ severity = words[3], title = table.concat(words, " ", 4) })))
+            elseif command == "incident" and words[2] == "update" and words[3] and words[4] then
+                printResponse(context.network:request("incident.update", authorized({ id = words[3], status = words[4], note = #words > 4 and table.concat(words, " ", 5) or nil })))
+            elseif command == "doors" then
+                printResponse(context.network:request("access.list", authorized()))
+            elseif command == "door" and words[2] and (words[3] == "lock" or words[3] == "unlock") then
+                local selector = words[2]; local fields = { locked = words[3] == "lock" }
+                if selector:sub(1, 1) == "@" then fields.zone = selector:sub(2) else fields.id = selector end
+                printResponse(context.network:request("access.set", authorized(fields)))
+            elseif command == "map" then
+                local response, err = context.network:request("map.get", authorized())
+                local data = responseData(response, err)
+                if data and tostring(words[2] or ""):lower() == "monitor" then withMonitor(function(width, height)
+                    print("FACILITY MAP")
+                    for _, room in pairs(data.rooms or {}) do
+                        local x, y = math.max(1, room.x), math.max(2, room.y + 1)
+                        if x <= width and y <= height then term.setCursorPos(x, y); term.setBackgroundColor(room.color or colors.gray); write((room.name or room.id):sub(1, math.min(room.width or 5, width - x + 1))); term.setBackgroundColor(colors.black) end
+                    end
+                end) elseif data then print(textutils.serialize(data, { compact = true })) end
+            elseif command == "room" and words[2] == "set" and words[3] and words[8] then
+                printResponse(context.network:request("map.room.set", authorized({ id=words[3], floor=tonumber(words[4]), x=tonumber(words[5]), y=tonumber(words[6]), width=tonumber(words[7]), height=tonumber(words[8]), name=#words>8 and table.concat(words," ",9) or words[3] })))
+            elseif command == "room" and words[2] == "remove" and words[3] then
+                printResponse(context.network:request("map.room.remove", authorized({ id = words[3] })))
+            elseif command == "rules" then
+                printResponse(context.network:request("automation.list", authorized()))
+            elseif command == "rule" and words[2] == "run" and words[3] then
+                printResponse(context.network:request("automation.run", authorized({ id = words[3] })))
+            elseif command == "rule" and words[2] == "set" and words[3] and words[5] then
+                local action = words[5]; local specification
+                if action == "lock" or action == "unlock" then specification = { type = action .. "-zone", zone = words[6] or "all" }
+                elseif action == "alarm" then specification = { type = "alarm", count = tonumber(words[6]) or 3 }
+                else specification = { type = action, message = #words > 5 and table.concat(words, " ", 6) or "Automated alert" } end
+                printResponse(context.network:request("automation.set", authorized({ id = words[3], topic = words[4], actions = { specification } })))
+            elseif command == "fleet" and words[2] == "status" and words[3] then
+                printResponse(context.network:requestTo(words[3], "fleet.agent.status", authorized()))
+            elseif command == "fleet" and words[2] == "stage" and words[3] then
+                printResponse(context.network:requestTo(words[3], "fleet.agent.stage", authorized({ ref = words[4] or "cookieos-v3-rewrite" }), 120))
+            elseif command == "fleet" and words[2] == "apply" and words[3] then
+                printResponse(context.network:requestTo(words[3], "fleet.agent.apply", authorized(), 10))
+            elseif command == "fleet" and words[2] == "rollback" and words[3] then
+                printResponse(context.network:requestTo(words[3], "fleet.agent.rollback", authorized(), 10))
+            elseif command == "fleet" then
+                printResponse(context.network:request("fleet.status", authorized()))
             elseif command == "routes" then
                 for node, route in pairs(context.network.routes) do
                     print(string.format("%s  %s  %s  %ds", node, route.mode, route.location, math.floor(os.clock() - route.seenAt)))

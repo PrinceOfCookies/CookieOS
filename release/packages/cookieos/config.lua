@@ -78,6 +78,15 @@ local defaults = {
         stagePath = "/cookieos-update/staged",
         backupPath = "/cookieos-update/backup",
     },
+    operations = {
+        dataPath = "/cookieos-data/operations.db",
+        doors = {},
+    },
+    commandCluster = {
+        peers = {},
+        quorum = 1,
+        priority = 100,
+    },
 }
 
 local function clone(value)

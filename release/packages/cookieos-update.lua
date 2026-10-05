@@ -6,6 +6,7 @@ local Update = require("cookieos.update")
 local args = { ... }
 local manifestLocation = args[1]
 local config = Config.load(args[2] or "/cookieos-node.lua")
+local stageOnly = args[3] == "--stage-only"
 
 local function fetchHttpFile(url)
     local response, requestError, errorResponse = http.get(url, { ["User-Agent"] = "CookieOS" })
@@ -56,8 +57,8 @@ local ok, stageError = Update.stage(config, manifest, function(file)
 end)
 if not ok then error(stageError) end
 print("Staged CookieOS " .. manifest.version .. " with " .. #manifest.files .. " file(s).")
-write("Apply and reboot now? [y/N] ")
-if read():lower() == "y" then
+if not stageOnly then write("Apply and reboot now? [y/N] ") end
+if not stageOnly and read():lower() == "y" then
     local applied, applyError = Update.apply(config)
     if not applied then error(applyError) end
     os.reboot()

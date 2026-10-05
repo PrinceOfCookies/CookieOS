@@ -2,7 +2,7 @@ local service = {}
 
 service.manifest = {
     name = "audio", version = "3.4.0",
-    provides = { "audio.status", "audio.sound", "audio.alarm", "audio.stop" },
+    provides = { "audio.status", "audio.sound", "audio.alarm", "audio.stop", "audio.announce" },
     depends = { "node" }, peripherals = { "speaker" },
 }
 
@@ -48,6 +48,20 @@ function service.register(context)
         if not ok then return nil, err end
         for _, speaker in ipairs(speakers) do speaker.stop() end
         return { stopped = true }
+    end)
+
+    context.network:provide("audio.announce", function(payload, packet)
+        local ok, err = authorize(payload, packet, "announcements.send")
+        if not ok then return nil, err end
+        local message = tostring(payload.message or "")
+        if message == "" or #message > 240 then return nil, "Announcement must contain 1-240 characters" end
+        local priority = tostring(payload.priority or "normal"):lower()
+        local cues = { normal = { "minecraft:block.note_block.pling", 1.2 }, urgent = { "minecraft:block.bell.use", 0.8 }, emergency = { "minecraft:entity.wither.spawn", 1 } }
+        local cue = cues[priority]; if not cue then return nil, "Priority must be normal, urgent, or emergency" end
+        for _, speaker in ipairs(speakers) do speaker.playSound(cue[1], priority == "emergency" and 3 or 2, cue[2]) end
+        -- CC speakers cannot synthesize arbitrary text; monitors/chat gateways consume this event.
+        context.publish("announcement", { message = message, priority = priority, zone = (context.config.audio or {}).zone or context.config.location })
+        return { announced = true, message = message, priority = priority, zone = (context.config.audio or {}).zone or context.config.location }
     end)
 end
 

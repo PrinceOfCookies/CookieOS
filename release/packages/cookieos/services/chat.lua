@@ -1,7 +1,7 @@
 local service = {}
 
 service.manifest = {
-    name = "chat", version = "3.4.0", provides = { "chat.send", "chat.status" },
+    name = "chat", version = "3.6.0", provides = { "chat.send", "chat.status", "chat.history" },
     depends = { "node" }, peripherals = { "chatBox" },
 }
 
@@ -10,6 +10,7 @@ function service.register(context)
     if not chatBox then error("chat service requires a chatBox") end
     local options = context.config.chat or {}
     local displayName = options.displayName or "CookieSecurity"
+    local history = {}
 
     local function send(message)
         local ok, result = pcall(chatBox.sendMessage, tostring(message), displayName, options.prefix or "[]")
@@ -23,9 +24,23 @@ function service.register(context)
         if not allowed then return nil, reason end
         local message = tostring(payload.message or "")
         if message == "" then return nil, "Message is required" end
-        local ok, err = send(message)
+        local channel = tostring(payload.channel or "global"):lower()
+        if not channel:match("^[%w_%-]+$") then return nil, "Invalid channel" end
+        local recipient = payload.recipient and tostring(payload.recipient) or nil
+        local rendered = "[" .. channel .. "] " .. (recipient and ("to " .. recipient .. ": ") or "") .. message
+        local ok, err = send(rendered)
         if not ok then return nil, err end
-        return { sent = true }
+        history[#history + 1] = { at = os.epoch("utc"), channel = channel, recipient = recipient, message = message, source = packet.source }
+        while #history > (options.historyLimit or 100) do table.remove(history, 1) end
+        context.publish("chat.message", history[#history])
+        return { sent = true, channel = channel, recipient = recipient }
+    end)
+    context.network:provide("chat.history", function(payload, packet)
+        local allowed, reason = context.authorize(payload, packet, "chat.send")
+        if not allowed then return nil, reason end
+        local result = {}; local channel = payload.channel and tostring(payload.channel):lower()
+        for _, entry in ipairs(history) do if not channel or entry.channel == channel then result[#result + 1] = entry end end
+        return { messages = result, total = #result }
     end)
 
     if options.commands then

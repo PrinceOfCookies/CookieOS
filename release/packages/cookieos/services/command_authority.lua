@@ -3,7 +3,7 @@ local service = {}
 
 service.manifest = {
     name = "command-authority", version = "3.5.0",
-    provides = { "command.status" }, depends = { "node" },
+    provides = { "command.status", "command.cluster" }, depends = { "node" },
     peripherals = { "speaker" },
 }
 
@@ -122,7 +122,22 @@ function service.register(context)
     }
 
     context.network:provide("command.status", function()
-        return { locked = state.locked, generation = state.generation, reason = state.reason, authority = context.config.node }
+        return { locked = state.locked, generation = state.generation, reason = state.reason, authority = context.config.node,
+            priority = tonumber((context.config.commandCluster or {}).priority) or 100,
+            peers = (context.config.commandCluster or {}).peers or {} }
+    end)
+    context.network:provide("command.cluster", function()
+        local cluster = context.config.commandCluster or {}
+        local members = {{ node = context.config.node, priority = tonumber(cluster.priority) or 100, online = true }}
+        for _, peer in ipairs(cluster.peers or {}) do
+            local route = context.network.routes[peer]
+            members[#members + 1] = { node = peer, online = route ~= nil, age = route and math.floor(os.clock() - route.seenAt) }
+        end
+        table.sort(members, function(a, b) return a.node < b.node end)
+        local leader
+        for _, member in ipairs(members) do if member.online and (not leader or (member.priority or 0) > (leader.priority or 0) or ((member.priority or 0) == (leader.priority or 0) and member.node < leader.node)) then leader = member end end
+        return { members = members, leader = leader and leader.node, quorum = tonumber(cluster.quorum) or 1,
+            quorate = (function() local n=0 for _,m in ipairs(members)do if m.online then n=n+1 end end return n >= (tonumber(cluster.quorum) or 1) end)() }
     end)
     context.supervisor:add("command-lockdown-beacon", function()
         while true do publish(); sleep(5) end

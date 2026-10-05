@@ -8,6 +8,7 @@ local args = { ... }
 local config = Config.load(args[1] or "/cookieos-node.lua")
 if not config.identity.nodeKey then error("Configure identity.nodeKey before pairing") end
 local side = args[2] or config.transports[1].side
+local expectedAuthority = args[3] or (config.commandAuthority and config.commandAuthority.node)
 if not rednet.isOpen(side) then rednet.open(side) end
 
 print("The CookieSecurity Command Authority must generate the enrollment code.")
@@ -38,7 +39,7 @@ while os.clock() - started < 10 do
         if type(authority) ~= "table" or type(authority.node) ~= "string" or type(authority.keys) ~= "table" then
             error("Invalid pairing response")
         end
-        if config.commandAuthority.required and authority.node ~= config.commandAuthority.node then
+        if config.commandAuthority.required and authority.node ~= expectedAuthority then
             error("Enrollment response came from unexpected authority " .. authority.node)
         end
         local keys = Trust.load(config.network.trustPath)
