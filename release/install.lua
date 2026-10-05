@@ -177,6 +177,7 @@ local presets={
   {name="Chat gateway",mode="server",services={"node","fleet-agent","chat","maintenance"},requires="chatBox"},
   {name="Access controller",mode="server",services={"node","fleet-agent","operations","maintenance"}},
   {name="Relay",mode="relay",services={"node","fleet-agent"}},
+  {name="Network Logger",mode="server",services={"node","fleet-agent","network-logger"}},
   {name="Hybrid core + relay",mode="hybrid",services={"node","fleet-agent","auth","audit","events","personnel","security","maintenance","operations","orchestration","terminal"}},
   {name="Custom node",mode="client",services={"node"}},
 }
@@ -203,6 +204,7 @@ local function wizard(roleName,existing)
   if existing then
     config.network=existing.network;config.update=existing.update;config.auth=existing.auth
     config.pairing=existing.pairing;config.events=existing.events;config.commandAuthority=existing.commandAuthority
+    config.networkLogger=existing.networkLogger
     if existing.identity and existing.identity.user then config.identity.user=existing.identity.user end
   end
   local isAuthority=selected.name=="Auth/core server"or selected.name=="Hybrid core + relay"
@@ -235,7 +237,7 @@ local function wizard(roleName,existing)
     for peer in peers:gmatch("[^,%s]+")do table.insert(config.commandCluster.peers,peer)end
     if #config.commandCluster.peers>0 then config.commandCluster.quorum=tonumber(ask("Required authority quorum","1"))or 1 end
   elseif isAuthority then
-    if not config.auth then
+    if not config.auth or type(config.auth.seedUsers) ~= "table" or next(config.auth.seedUsers) == nil then
       local admin=ask("Initial administrator","admin")
       local password="";while #password<4 do write("Initial administrator password (4+ characters): ");password=read("*")end
       config.auth={seedUsers={[admin]={clearance=5,role="Administrator",status="Active",extraPermissions={"all"},password=password}},delegates={}}

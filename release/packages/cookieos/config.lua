@@ -25,6 +25,10 @@ local defaults = {
         trustPath = "/cookieos-data/trust.db",
     },
     transports = {},
+    networkLogger = {
+        dataPath = "/cookieos-data/network.log",
+        ignoreNodes = {},
+    },
     services = {},
     identity = {},
     auth = {

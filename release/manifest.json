@@ -1,5 +1,5 @@
 {
-  "version": "3.7.1-dev.ef480a8",
+  "version": "3.7.1-dev.652bac5",
   "repository": "PrinceOfCookies/CookieOS",
   "ref": "cookieos-v3-rewrite",
   "bundle": "release/bundle.json",
@@ -22,7 +22,7 @@
     {
       "path": "/cookieos/config.lua",
       "source": "release/packages/cookieos/config.lua",
-      "sha256": "eea18e65707dc2a3399db315ef1d510f4689cb5b83f0dedb39f6fffdcee365a2"
+      "sha256": "4aec6641736c491378bf42dc51de2b6148f1fb0d727cb4e90bcdbcb03c805de7"
     },
     {
       "path": "/cookieos/crypto/box.lua",
@@ -62,12 +62,12 @@
     {
       "path": "/cookieos/net/network.lua",
       "source": "release/packages/cookieos/net/network.lua",
-      "sha256": "9fdf9643a856cc08989fc78b813178bd9f91ff6d840a99c8d1e83e0c66f7343f"
+      "sha256": "1af63555cf65cf403aae851edce5052ae214fc27a0c67cccf643def1156a43aa"
     },
     {
       "path": "/cookieos/runtime.lua",
       "source": "release/packages/cookieos/runtime.lua",
-      "sha256": "d12a3d4d7db713a007e11c6dcccdbe55383e8efefd4de482b91f062f3c030166"
+      "sha256": "3aa0faf2328537de964e9c034dc259d1cc7f8f6e7405df84e737ff0768820925"
     },
     {
       "path": "/cookieos/services/audio.lua",
@@ -113,6 +113,11 @@
       "path": "/cookieos/services/maintenance.lua",
       "source": "release/packages/cookieos/services/maintenance.lua",
       "sha256": "a2363f619a5867ffad9ce12c5fa7041e0d9f89d903cb5f72f34dc68d9b94639e"
+    },
+    {
+      "path": "/cookieos/services/network_logger.lua",
+      "source": "release/packages/cookieos/services/network_logger.lua",
+      "sha256": "5e8ea75bc38110983e7f29147be4a3e4ad8cc86eab8938ab6ef4e1da746f7d29"
     },
     {
       "path": "/cookieos/services/node.lua",
@@ -192,7 +197,7 @@
     {
       "path": "/install.lua",
       "source": "release/packages/install.lua",
-      "sha256": "b80b6e566f7ed13fe79381dae22af7fad0f0f58535d076e2cb1aa2b22734240b"
+      "sha256": "327849b0c2d29626dbdfb121b61c93ed9407b95b421f20ea5862e408dd2c2973"
     },
     {
       "path": "/pair-node.lua",
@@ -283,5 +288,5 @@
     "/os/programs/PlayMusic",
     "/programReplacements/shell.lua"
   ],
-  "signature": "07748f65c7d461733571da4d76bb2d668c92bb2aff73621363039d03d51dba55"
+  "signature": "5a93f54eddb5527539801f725334365265ff7bf756b9756560e0b9178c5e0c65"
 }

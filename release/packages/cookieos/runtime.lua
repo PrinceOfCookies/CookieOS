@@ -24,6 +24,7 @@ local builtins = {
     pairing = "cookieos.services.pairing",
     operations = "cookieos.services.operations",
     orchestration = "cookieos.services.orchestration",
+    ["network-logger"] = "cookieos.services.network_logger",
     ["fleet-agent"] = "cookieos.services.fleet_agent",
 }
 
