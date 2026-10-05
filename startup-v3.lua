@@ -12,4 +12,20 @@ if not bootAllowed then
     shell.run("recovery.lua", configPath)
     return
 end
-runtime.start(configPath)
+local started, startError = pcall(runtime.start, configPath)
+if not started then
+    os.startTimer(0)
+    while true do
+        term.setBackgroundColor(colors.black)
+        term.setTextColor(colors.red)
+        term.clear()
+        term.setCursorPos(1, 1)
+        print("CookieSecurity is locked.")
+        print("Startup could not verify Command Authority enrollment.")
+        printError(tostring(startError))
+        print("No shell access is available on this terminal.")
+        print("Complete enrollment from the Command Authority, then reboot.")
+        os.pullEventRaw("timer")
+        os.startTimer(10)
+    end
+end
