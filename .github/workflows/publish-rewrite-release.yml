@@ -37,7 +37,7 @@ jobs:
         run: |
           VERSION="${{ inputs.version }}"
           if [ -z "$VERSION" ]; then
-            VERSION="3.4.0-dev.${GITHUB_SHA::7}"
+            VERSION="3.5.0-dev.${GITHUB_SHA::7}"
           fi
           INTEGRITY_KEY="CookieOS-public-integrity-cookieos-v3-rewrite-v1"
           node tools/build-release.mjs "$VERSION" "PrinceOfCookies/CookieOS" "cookieos-v3-rewrite" "$INTEGRITY_KEY" release
