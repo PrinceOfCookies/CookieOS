@@ -21,7 +21,8 @@ textutils = {
     serialize = function(value) return value end,
     unserialize = function(value) return value end,
 }
-local speaker = { playSound = function() end }
+local alarmCount = 0
+local speaker = { playSound = function() alarmCount = alarmCount + 1 end }
 local detector = { getPlayerPos = function(name) if name == "Owner" then return { x = 10, y = 64, z = 10 } end end }
 peripheral = { find = function(kind) if kind == "speaker" then return speaker elseif kind == "playerDetector" then return detector end end }
 gps = { locate = function() return 10, 64, 10 end }
@@ -53,6 +54,11 @@ assert(context.commandAuthority.authenticate())
 input = { "Owner", "wrong-password" }
 assert(context.commandAuthority.authenticate() == nil)
 assert(provided["command.status"]().locked == true)
+input = { "Owner", "wrong-override" }
+local overrideOk, overrideError = context.commandAuthority.override()
+assert(not overrideOk and tostring(overrideError):find("Override rejected", 1, true))
+assert(provided["command.status"]().locked == true)
+assert(alarmCount >= 7)
 input = { "Owner", "override-password" }
 assert(context.commandAuthority.override())
 assert(provided["command.status"]().locked == false)

@@ -54,6 +54,52 @@ function service.register(context)
         for _, speaker in ipairs(speakers) do pcall(speaker.playSound, sound, 3, pitch or 1) end
     end
 
+    local function failureAlarm()
+        for _ = 1, 3 do
+            announce("minecraft:block.bell.use", 0.5)
+            sleep(0.25)
+        end
+    end
+
+    local function diagnostic(username)
+        local details = { username = username, detector = "unknown", gps = "unknown", configuredPosition = options.position }
+        if peripheral.getName and peripheral.getMethods then
+            local ok, name = pcall(peripheral.getName, detector)
+            if not ok then name = nil end
+            details.detector = name or "unnamed"
+            if name then
+                local methodsOk, methods = pcall(peripheral.getMethods, name)
+                if methodsOk and type(methods) == "table" then details.detectorMethods = methods end
+            end
+        end
+        if gps and gps.locate then
+            local ok, x, y, z = pcall(gps.locate, 2, false)
+            if ok and x then details.gps = { x = x, y = y, z = z } else details.gps = "GPS locate failed: " .. tostring(x) end
+        end
+        if detector.getOnlinePlayers then
+            local ok, players = pcall(detector.getOnlinePlayers)
+            if ok and type(players) == "table" then details.onlinePlayers = players else details.onlinePlayersError = tostring(players) end
+        end
+        if username and detector.getPlayerPos then
+            local ok, player = pcall(detector.getPlayerPos, username)
+            if ok and type(player) == "table" then details.player = player else details.playerError = tostring(player) end
+        end
+        return details
+    end
+
+    local function diagnosticText(details)
+        if options.debug == false then return "" end
+        local parts = { "[Command debug] detector=" .. tostring(details.detector), "gps=" .. (type(details.gps) == "table" and (details.gps.x .. "," .. details.gps.y .. "," .. details.gps.z) or tostring(details.gps)) }
+        if details.player then parts[#parts + 1] = "player=" .. tostring(details.player.x) .. "," .. tostring(details.player.y) .. "," .. tostring(details.player.z) .. " dimension=" .. tostring(details.player.dimension or "unknown") end
+        if details.playerError then parts[#parts + 1] = "player lookup=" .. details.playerError end
+        if details.onlinePlayers then
+            local names = {}
+            for _, name in ipairs(details.onlinePlayers) do names[#names + 1] = tostring(name) end
+            parts[#parts + 1] = "online=" .. table.concat(names, ",")
+        end
+        return table.concat(parts, " | ")
+    end
+
     local function position()
         if gps and gps.locate then
             local x, y, z = gps.locate(2, false)
@@ -65,12 +111,20 @@ function service.register(context)
 
     local function nearby(username)
         local x, y, z = position()
-        if not x then return nil, "Command Authority location unavailable (GPS failed and no configured position)" end
-        local ok, player = pcall(detector.getPlayerPos, username)
-        if not ok or type(player) ~= "table" then return nil, "Configured CL6 player is not visible to the detector" end
+        local details = diagnostic(username)
+        if not x then return nil, "Command Authority location unavailable (GPS failed and no configured position). " .. diagnosticText(details), details end
+        local lookupName = username
+        local ok, player = pcall(detector.getPlayerPos, lookupName)
+        if (not ok or type(player) ~= "table") and type(details.onlinePlayers) == "table" then
+            for _, candidate in ipairs(details.onlinePlayers) do
+                if tostring(candidate):lower() == tostring(username):lower() then lookupName = candidate; ok, player = pcall(detector.getPlayerPos, candidate); break end
+            end
+        end
+        if not ok or type(player) ~= "table" then return nil, "Configured CL6 player is not visible to the detector. " .. diagnosticText(details), details end
+        details.player = player
         local distance = math.sqrt((player.x - x)^2 + (player.y - y)^2 + (player.z - z)^2)
-        if distance > (tonumber(options.radius) or 6) then return nil, string.format("CL6 player is %.1f blocks away", distance) end
-        return true, distance
+        if distance > (tonumber(options.radius) or 6) then return nil, string.format("CL6 player is %.1f blocks away (radius %.1f). %s", distance, tonumber(options.radius) or 6, diagnosticText(details)), details end
+        return true, distance, details
     end
 
     local function publish()
@@ -94,10 +148,11 @@ function service.register(context)
             if state.locked then return nil, "Facility is locked down" end
             write("CL6 Minecraft username: "); local username = read()
             write("CL6 password: "); local password = read("*")
-            local present, presenceError = nearby(username)
+            local present, presenceError, details = nearby(username)
             if username ~= options.user or not present or hash(password, options.credential) ~= options.credential.hash then
-                lock(presenceError or "Command Authority authentication failed", username)
-                return nil, "Authentication failed; facility lockdown activated"
+                local reason = presenceError or "Command Authority authentication failed"
+                lock(reason, username); failureAlarm()
+                return nil, "Authentication failed; facility lockdown activated. " .. reason, details
             end
             audit("command.login", { user = username, outcome = "allowed", distance = presenceError })
             context.log.info("CL6 physical authentication succeeded for " .. username)
@@ -106,12 +161,12 @@ function service.register(context)
         override = function()
             write("CL6 Minecraft username: "); local username = read()
             write("Emergency override password: "); local password = read("*")
-            local present, presenceError = nearby(username)
+            local present, presenceError, details = nearby(username)
             if username ~= options.user or not present or hash(password, options.overrideCredential) ~= options.overrideCredential.hash then
                 audit("command.override", { user = username, outcome = "denied", reason = presenceError or "invalid credential" })
                 context.log.error("Lockdown override failed for " .. tostring(username) .. ": " .. tostring(presenceError or "invalid credential"))
-                announce("minecraft:block.note_block.bass", 0.5)
-                return nil, "Override rejected"
+                failureAlarm(); announce("minecraft:block.note_block.bass", 0.5)
+                return nil, "Override rejected. " .. tostring(presenceError or "invalid credential"), details
             end
             state = { locked = false, generation = (state.generation or 0) + 1, changedAt = os.epoch("utc"), clearedBy = username }
             writeState(path, state); announce("minecraft:block.note_block.chime", 1.5); publish()
@@ -119,6 +174,7 @@ function service.register(context)
             context.log.info("Global lockdown cleared locally by " .. username)
             return true
         end,
+        diagnostics = function(username) return diagnostic(username) end,
     }
 
     context.network:provide("command.status", function()
