@@ -132,6 +132,10 @@ function service.register(context)
             message = message, severity = severity, channels = payload.channels or { "monitor" }, source = packet.source,
         }, { source = packet.source, retain = false })
         if not event then return nil, eventError end
+        for _, channel in ipairs(payload.channels or { "monitor" }) do
+            if channel == "chat" and context.chat then context.chat.send("[" .. severity .. "] " .. message)
+            elseif (channel == "speaker" or channel == "audio") and context.audio then context.audio.announce(message, severity) end
+        end
         return { sent = true, event = event.id, severity = severity, message = message }
     end)
 
