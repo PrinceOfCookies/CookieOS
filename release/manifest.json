@@ -1,5 +1,5 @@
 {
-  "version": "3.7.1-dev.1192ba0",
+  "version": "3.7.1-dev.4b422a1",
   "repository": "PrinceOfCookies/CookieOS",
   "ref": "cookieos-v3-rewrite",
   "bundle": "release/bundle.json",
@@ -22,7 +22,7 @@
     {
       "path": "/cookieos/config.lua",
       "source": "release/packages/cookieos/config.lua",
-      "sha256": "4aec6641736c491378bf42dc51de2b6148f1fb0d727cb4e90bcdbcb03c805de7"
+      "sha256": "3ca4fdd72499e7ab58986aa79c481e9f7810324c7285e833238fc479f6ef65af"
     },
     {
       "path": "/cookieos/crypto/box.lua",
@@ -57,12 +57,12 @@
     {
       "path": "/cookieos/net/envelope.lua",
       "source": "release/packages/cookieos/net/envelope.lua",
-      "sha256": "1de24e92dbd382f786d6cd1748d19f9e399ee270ef42abced503278905bcf587"
+      "sha256": "5b07be64c3961fb36f9a639101b3221d8eabeeeecf1b47e64f7654c64ed62cf5"
     },
     {
       "path": "/cookieos/net/network.lua",
       "source": "release/packages/cookieos/net/network.lua",
-      "sha256": "1af63555cf65cf403aae851edce5052ae214fc27a0c67cccf643def1156a43aa"
+      "sha256": "20fb9ac63411416cc6e87ca38ae097ab8f63d00232b5782c3729e2ce5f01e190"
     },
     {
       "path": "/cookieos/runtime.lua",
@@ -97,7 +97,7 @@
     {
       "path": "/cookieos/services/command_terminal.lua",
       "source": "release/packages/cookieos/services/command_terminal.lua",
-      "sha256": "c0ebc49981995df90d2b7048ea2f6a553ca752defabeff32af41c8cf6e705d02"
+      "sha256": "d6224de5cf15e1a7c9a4559ce63b6092669001e9335e10af774905d9ed7b0410"
     },
     {
       "path": "/cookieos/services/events.lua",
@@ -197,7 +197,7 @@
     {
       "path": "/install.lua",
       "source": "release/packages/install.lua",
-      "sha256": "762d6182f038ebb18330892747641a3a76247513da69ce6fc07c39ce8d50af70"
+      "sha256": "e031913bd84dc5972b2c94a39e2fb2df669c918ba0a7e1940c8c371d68d4b681"
     },
     {
       "path": "/pair-node.lua",
@@ -257,7 +257,7 @@
     {
       "path": "/programReplacements/screenfetch.lua",
       "source": "release/packages/programReplacements/screenfetch.lua",
-      "sha256": "adfa751df9bda2e08326fec8dd149c1a4b64e9f46d5a802ba8b1d2ab28ed046a"
+      "sha256": "66c836fd161d39c2a17feadbc9ec32af8963b788cd4c332a43d150279bcb9fcf"
     },
     {
       "path": "/programReplacements/shutdown.lua",
@@ -288,5 +288,5 @@
     "/os/programs/PlayMusic",
     "/programReplacements/shell.lua"
   ],
-  "signature": "10d718888c1e40f79b59e944ff8686cf392515655a9c45038c9ad46fef6d41aa"
+  "signature": "e5ca99e766973b1152b8715c66088659da016d038748149f6aecaa38406f1142"
 }

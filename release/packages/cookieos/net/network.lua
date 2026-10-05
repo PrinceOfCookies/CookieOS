@@ -82,6 +82,13 @@ end
 function Network:send(kind, fields)
     fields = fields or {}
     fields.ttl = fields.ttl or self.config.network.ttl
+    if kind == "request" then
+        local logger = self.config.networkLogger and self.config.networkLogger.node
+        local command = self.config.commandAuthority or {}
+        local commandSource = command.authority or self.config.node == command.node
+        for _, node in ipairs(command.peers or {}) do if self.config.node == node then commandSource = true end end
+        if logger and logger ~= self.config.node and not commandSource then fields.nextHop = logger end
+    end
     local packet = Envelope.new(self.config.node, kind, fields)
     if self.config.identity.nodeKey then Envelope.sign(packet, self.config.identity.nodeKey) end
     self.seen[packet.id] = os.clock()
@@ -263,6 +270,7 @@ end
 function Network:shouldRelay(packet)
     if self.config.mode ~= "relay" and self.config.mode ~= "hybrid" then return false end
     if packet.destination == self.config.node then return false end
+    if packet.nextHop and packet.nextHop ~= self.config.node then return false end
     if packet.kind == "request" and self.services[packet.service] then return false end
     return packet.ttl > 1
 end
@@ -288,6 +296,14 @@ function Network:receive(side, channel, packet)
     self.seen[packet.id] = os.clock()
     if countEntries(self.seen) > self.config.network.maxSeenPackets then removeOldest(self.seen) end
     self:dispatch(packet)
+    if packet.nextHop == self.config.node and packet.kind == "request" then
+        if packet.ttl <= 1 then return end
+        local forwarded = Envelope.copy(packet)
+        forwarded.nextHop = nil
+        forwarded.ttl = forwarded.ttl - 1
+        self:transmit(forwarded)
+        return
+    end
     if self:shouldRelay(packet) then
         local forwarded = Envelope.copy(packet)
         forwarded.ttl = forwarded.ttl - 1

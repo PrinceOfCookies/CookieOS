@@ -26,6 +26,7 @@ local defaults = {
     },
     transports = {},
     networkLogger = {
+        node = nil,
         dataPath = "/cookieos-data/network.log",
         ignoreNodes = {},
     },

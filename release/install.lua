@@ -207,6 +207,11 @@ local function wizard(roleName,existing)
     selected.mode=ask("Node mode: client/server/relay/hybrid","client")
   end
   local config={version=3,node=node,mode=selected.mode,location=location,identity={nodeKey=existing and existing.identity and existing.identity.nodeKey or randomKey(node)},transports=transports,services=selected.services}
+  if selected.name~="Network Logger" then
+    local loggerNode=ask("Network Logger node name (blank to disable)",existing and existing.networkLogger and existing.networkLogger.node or "")
+    config.networkLogger={node=loggerNode~="" and loggerNode or nil}
+  else config.networkLogger={node=node}
+  end
   if existing then
     config.network=existing.network;config.update=existing.update;config.auth=existing.auth
     config.pairing=existing.pairing;config.events=existing.events;config.commandAuthority=existing.commandAuthority

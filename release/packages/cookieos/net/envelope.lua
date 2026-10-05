@@ -16,6 +16,7 @@ function envelope.new(node, kind, fields)
         kind = kind,
         source = node,
         destination = fields.destination,
+        nextHop = fields.nextHop,
         service = fields.service,
         replyTo = fields.replyTo,
         ttl = fields.ttl,
@@ -45,7 +46,7 @@ local function signable(packet)
     for key, value in pairs(packet) do
         -- TTL changes at each relay. Receivers still enforce their configured
         -- maximum, while all routing and application fields remain signed.
-        if key ~= "signature" and key ~= "ttl" then result[key] = value end
+        if key ~= "signature" and key ~= "ttl" and key ~= "nextHop" then result[key] = value end
     end
     return Canonical.encode(result)
 end
