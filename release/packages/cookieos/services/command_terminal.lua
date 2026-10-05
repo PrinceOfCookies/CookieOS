@@ -31,7 +31,7 @@ function service.register(context)
             end
         end
         print("CL6 physical authentication accepted. Local unrestricted shell opened.")
-        print("Use help for CraftOS commands. Filesystem changes are local and are not sent over the network.")
+        print("Use normal CraftOS help for shell commands. Run 'cs' for CookieSecurity tools.")
         print("CookieSecurity tools: cs, nodeinfo, logs, update, recover, enroll, revoke")
         shell.run("shell")
         print("Command shell exited. Restarting...")

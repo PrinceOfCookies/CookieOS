@@ -186,6 +186,12 @@ local function wizard(roleName,existing)
   local found=detect();local selected
   if roleName then for _,preset in ipairs(presets)do if preset.name:lower():find(roleName:lower(),1,true)then selected=preset end end end
   if not selected then selected=presets[choose("Choose this computer's role:",(function()local names={}for _,p in ipairs(presets)do table.insert(names,p.name)end return names end)())]end
+  if selected.name=="Auth terminal" then
+    print("Auth terminal is a client: it does not create usernames or passwords.")
+    print("To create the first administrator, choose Auth/core server on the central computer.")
+  elseif selected.name=="Auth/core server" then
+    print("Auth/core server creates the initial administrator username and password below.")
+  end
   if selected.requires then for _,required in ipairs(type(selected.requires)=="table"and selected.requires or{selected.requires})do
     if not found[required]and not(required=="playerDetector"and found.player_detector)then printError("Warning: role requires "..required)end
   end end
@@ -243,6 +249,7 @@ local function wizard(roleName,existing)
       config.auth={seedUsers={[admin]={clearance=5,role="Administrator",status="Active",extraPermissions={"all"},password=password}},delegates={}}
     end
     config.events=config.events or{publishers={}}
+    print("The next value must exactly match the Command Authority computer's Unique node name.")
     config.commandAuthority=config.commandAuthority or{required=true,node=ask("Primary Command Authority node name","cookiesecurity-command")}
     local peers=ask("Backup Command Authority nodes (comma separated, optional)","");config.commandAuthority.peers={}
     for peer in peers:gmatch("[^,%s]+")do table.insert(config.commandAuthority.peers,peer)end
