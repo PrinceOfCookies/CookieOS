@@ -9,6 +9,9 @@ reconfiguration, offline disks, recovery, and uninstall. See the
 [installer reference](docs/installation.md). The dashboard, incidents, access control,
 map editor, redundancy, and fleet updater are covered in the
 [CookieSecurity operations guide](docs/operations-guide.md).
+The touch interface and advanced security features are described in the
+[Command Center guide](docs/command-center.md), and custom integrations in the
+[extension API guide](docs/extensions.md).
 
 Drag `release/install.lua` onto the CC:Tweaked computer and run `install.lua`.
 The bootstrap is intentionally small, supports CC versions without

@@ -17,6 +17,7 @@ function service.register(context)
         if not ok then return nil, tostring(result) end
         return true
     end
+    context.chat={send=send}
 
     context.network:provide("chat.status", function() return { displayName = displayName, commands = options.commands == true } end)
     context.network:provide("chat.send", function(payload, packet)

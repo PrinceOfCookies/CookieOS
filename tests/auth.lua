@@ -47,12 +47,13 @@ local context = {
         identity = {},
         auth = {
             dataPath = "/cookieos-data/users.db",
-            trustedNodes = { terminal = "admin" },
+            trustedNodes = { terminal = "admin", terminal2 = "officer" },
             delegates = { tracker = true },
             seedUsers = {
                 admin = { clearance = 5, role = "Admin", status = "Active", extraPermissions = { "all" }, password = "test-password" },
                 worker = { clearance = 1, role = "Worker", status = "Active" },
                 fired = { clearance = 5, role = "Former", status = "FIRED" },
+                officer = { clearance = 5, role = "Officer", status = "Active", extraPermissions = { "all" } },
             },
         },
     },
@@ -83,7 +84,19 @@ end)
 
 test("trusted node can list users", function()
     local result, err = handlers["auth.users.list"]({ actor = "admin" }, { source = "terminal" })
-    assert(not err and result.total == 3)
+    assert(not err and result.total == 4)
+end)
+
+test("visitor passes and two-person approvals", function()
+    local issued, issueError = handlers["auth.pass.issue"]({ actor="admin",clearance=2,seconds=600,zones={"lobby"} },{source="terminal"})
+    assert(not issueError and #issued.code==12)
+    local redeemed, redeemError = handlers["auth.pass.redeem"]({code=issued.code},{source="visitor-terminal"})
+    assert(not redeemError and redeemed.token and redeemed.clearance==2 and redeemed.zones[1]=="lobby")
+    local duplicate = handlers["auth.pass.redeem"]({code=issued.code},{source="visitor-terminal"});assert(not duplicate)
+    local approval = assert(handlers["auth.approval.request"]({actor="admin",action="policy:lockdown"},{source="terminal"}))
+    local selfApproved,selfError=handlers["auth.approval.approve"]({actor="admin",id=approval.id},{source="terminal"});assert(not selfApproved and selfError)
+    local approved,approveError=handlers["auth.approval.approve"]({actor="officer",id=approval.id},{source="terminal2"});assert(not approveError and approved.status=="approved")
+    assert(context.auth.consumeApproval(approval.id,"policy:lockdown"))
 end)
 
 test("spoofed actor is rejected", function()

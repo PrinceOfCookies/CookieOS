@@ -67,3 +67,8 @@ Rollout plans are stored through `fleet.plan`. Applying or rolling back schedule
 ## Permissions
 
 New permission families include `operations.view`, `incidents.view`, `incidents.manage`, `automation.view`, `automation.manage`, `access.view`, `access.use`, `access.manage`, `map.view`, `map.manage`, `announcements.send`, `updates.view`, and `updates.manage`.
+
+CookieSecurity 3.7 adds the graphical console, policy profiles, advanced alarms,
+emergency workflows, notifications, tasks, simulations, credential policies,
+device health, hash-chained audit investigation, and extensions. See the
+[Command Center guide](command-center.md) and [extension API](extensions.md).

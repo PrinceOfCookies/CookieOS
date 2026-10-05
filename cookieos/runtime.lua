@@ -23,6 +23,7 @@ local builtins = {
     ["personnel-display"] = "cookieos.services.personnel_display",
     pairing = "cookieos.services.pairing",
     operations = "cookieos.services.operations",
+    orchestration = "cookieos.services.orchestration",
     ["fleet-agent"] = "cookieos.services.fleet_agent",
 }
 
@@ -124,6 +125,7 @@ function runtime.start(configPath)
         if not response.ok then return nil, response.error end
         return response.data
     end
+    context.extensions = require("cookieos.extensions").load(context, (nodeConfig.extensions or {}).modules)
 
     -- Auth establishes the authorization boundary used by other services, so it
     -- must register before them regardless of configuration order.

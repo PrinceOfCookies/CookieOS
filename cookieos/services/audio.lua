@@ -15,6 +15,20 @@ function service.register(context)
         if not allowed then return nil, reason end
         return true
     end
+    local function playAlarm(count)
+        for _ = 1, count do
+            for _, speaker in ipairs(speakers) do speaker.playSound("minecraft:block.bell.use", 2, 0.7) end
+            sleep(0.35)
+        end
+    end
+    local function announce(message, priority)
+        local cues = { normal = { "minecraft:block.note_block.pling", 1.2 }, urgent = { "minecraft:block.bell.use", 0.8 }, emergency = { "minecraft:entity.wither.spawn", 1 } }
+        local cue = cues[priority]; if not cue then return nil, "Priority must be normal, urgent, or emergency" end
+        for _, speaker in ipairs(speakers) do speaker.playSound(cue[1], priority == "emergency" and 3 or 2, cue[2]) end
+        context.publish("announcement", { message = message, priority = priority, zone = (context.config.audio or {}).zone or context.config.location })
+        return true
+    end
+    context.audio={alarm=playAlarm,announce=announce,stop=function()for _,speaker in ipairs(speakers)do speaker.stop()end end}
 
     context.network:provide("audio.status", function(payload, packet)
         local ok, err = authorize(payload, packet, "audio.trigger")
@@ -36,10 +50,7 @@ function service.register(context)
         local ok, err = authorize(payload, packet, "audio.trigger")
         if not ok then return nil, err end
         local count = math.max(1, math.min(10, tonumber(payload.count) or 3))
-        for _ = 1, count do
-            for _, speaker in ipairs(speakers) do speaker.playSound("minecraft:block.bell.use", 2, 0.7) end
-            sleep(0.35)
-        end
+        playAlarm(count)
         return { alarm = true, count = count }
     end)
 
@@ -56,11 +67,7 @@ function service.register(context)
         local message = tostring(payload.message or "")
         if message == "" or #message > 240 then return nil, "Announcement must contain 1-240 characters" end
         local priority = tostring(payload.priority or "normal"):lower()
-        local cues = { normal = { "minecraft:block.note_block.pling", 1.2 }, urgent = { "minecraft:block.bell.use", 0.8 }, emergency = { "minecraft:entity.wither.spawn", 1 } }
-        local cue = cues[priority]; if not cue then return nil, "Priority must be normal, urgent, or emergency" end
-        for _, speaker in ipairs(speakers) do speaker.playSound(cue[1], priority == "emergency" and 3 or 2, cue[2]) end
-        -- CC speakers cannot synthesize arbitrary text; monitors/chat gateways consume this event.
-        context.publish("announcement", { message = message, priority = priority, zone = (context.config.audio or {}).zone or context.config.location })
+        local announced,announceError=announce(message,priority);if not announced then return nil,announceError end
         return { announced = true, message = message, priority = priority, zone = (context.config.audio or {}).zone or context.config.location }
     end)
 end
