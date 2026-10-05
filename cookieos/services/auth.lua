@@ -17,6 +17,7 @@ local defaultPermissions = {
     ["security.setLevel"] = 4,
     ["audio.trigger"] = 3,
     ["audio.stop"] = 3,
+    ["chat.send"] = 1,
     ["auth.whois"] = 1,
     ["auth.view"] = 4,
     ["auth.manage"] = 5,

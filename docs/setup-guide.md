@@ -36,7 +36,7 @@ creates its own pairing code.
 
 ## 3. Install and pair a terminal
 
-Run the same installer on another computer and choose **Terminal client**. Use a clear
+Run the same installer on another computer and choose **Auth terminal**. Use a clear
 node name such as `security-desk-01`. When asked to pair, first run `paircode` on the
 logged-in authority console, then enter that code on the terminal.
 
@@ -48,6 +48,14 @@ login admin
 
 Pairing establishes node trust. Login establishes a user session. Both are required:
 pairing a computer does not automatically log a person in.
+
+### Command terminals
+
+Choose **Command terminal** only for physically trusted computers. It opens an
+unrestricted local CraftOS shell, including `ls`, `edit`, `delete`, `copy`, and normal
+program execution. It does not provide remote filesystem control; anyone at that
+computer can alter its local files. Use an **Auth terminal** for ordinary security
+operators and reserve command terminals for system administration.
 
 ## 4. Create non-administrator logins
 
@@ -84,12 +92,20 @@ CookieOS finds the first attached monitor and leaves the complete command list o
 - **Player tracker** requires a `player_detector` peripheral.
 - **Hybrid core + relay** combines the authority, local terminal, and relay roles.
 - **Custom node** lets an advanced operator choose services and node mode manually.
+- **Speaker zone** hosts authenticated sound and alarm controls on attached speakers.
+- **Chat gateway** sends authenticated messages through an attached chat box and can
+  optionally expose configured `!help`, `!where`, and `!security` chat commands.
 
 Give every computer a unique node name. The suggested `cookieos-NUMBER` uses the
 ComputerCraft computer ID only as a convenient default and can be replaced.
 
 Pair every non-authority node using a fresh authority-generated code. Codes expire
 and cannot be reused.
+
+From a command terminal, run `cookiesecurity` for local configuration, pairing,
+recovery, logs, and shell shortcuts. Speaker controls from an Auth terminal are
+`sound [Minecraft sound]`, `alarm [count]`, and `audiostop`; use `chat <message>` for
+the chat gateway.
 
 ## 7. Updates, repairs, and reconfiguration
 

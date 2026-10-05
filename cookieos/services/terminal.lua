@@ -30,6 +30,10 @@ local function printHelp()
     print("  topics                List event topics")
     print("  paircode              Authority creates a 16-character pairing code")
     print("  revoke <node>         Revoke a paired node")
+    print("  sound [name]          Play a sound in a speaker zone")
+    print("  alarm [count]         Trigger the speaker-zone alarm")
+    print("  audiostop             Stop speaker playback")
+    print("  chat <message>        Send through the chat gateway")
 end
 
 local function friendlyError(message)
@@ -204,6 +208,14 @@ function service.register(context)
                 end
             elseif command == "revoke" and words[2] then
                 printResponse(context.network:request("pairing.revoke", authorized({ node = words[2] })))
+            elseif command == "sound" then
+                printResponse(context.network:request("audio.sound", authorized({ sound = words[2] })))
+            elseif command == "alarm" then
+                printResponse(context.network:request("audio.alarm", authorized({ count = tonumber(words[2]) or 3 })))
+            elseif command == "audiostop" then
+                printResponse(context.network:request("audio.stop", authorized()))
+            elseif command == "chat" and words[2] then
+                printResponse(context.network:request("chat.send", authorized({ message = table.concat(words, " ", 2) })))
             elseif command == "routes" then
                 for node, route in pairs(context.network.routes) do
                     print(string.format("%s  %s  %s  %ds", node, route.mode, route.location, math.floor(os.clock() - route.seenAt)))
