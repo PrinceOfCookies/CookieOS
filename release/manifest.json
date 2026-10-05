@@ -1,5 +1,5 @@
 {
-  "version": "3.7.1-dev.ec1c72f",
+  "version": "3.7.1-dev.6ef7cd3",
   "repository": "PrinceOfCookies/CookieOS",
   "ref": "cookieos-v3-rewrite",
   "bundle": "release/bundle.json",
@@ -102,7 +102,7 @@
     {
       "path": "/cookieos/services/events.lua",
       "source": "release/packages/cookieos/services/events.lua",
-      "sha256": "ee881f57da4acab8f6851769e24d4291dc252a85655e6c7a31c08e9058838942"
+      "sha256": "b13c13544d85077a45ca8aaadabfdcc0dd9998f35a454a516178e13a5ccfcbad"
     },
     {
       "path": "/cookieos/services/fleet_agent.lua",
@@ -288,5 +288,5 @@
     "/os/programs/PlayMusic",
     "/programReplacements/shell.lua"
   ],
-  "signature": "c95b4930c2f6f646518cd7ea3b39542742a88eba14f0eaeaee74ff5d78ba9ddf"
+  "signature": "1d3f71bbad3bb6adb12b75fc34b66f76dfcff474a3f4e6d63f3e53678eb802fd"
 }
