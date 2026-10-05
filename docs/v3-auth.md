@@ -32,6 +32,17 @@ requesting node, expire after `auth.sessionSeconds`, and are revoked when the us
 credential changes. Five failed logins trigger a temporary lock by default. An
 authorized terminal can manage credentials with `passwd <user>`.
 
+Administrators with `auth.manage` can create and remove terminal logins:
+
+```text
+useradd operator 2 Control Room Operator
+userdel operator
+```
+
+`useradd` prompts twice for a password and accepts clearance levels from 0 through 5.
+The optional role is descriptive and may contain spaces. New users are active but do
+not receive extra permissions beyond those granted by their clearance.
+
 Login uses a short-lived nonce challenge and an HMAC proof derived from the stored
 password verifier. The password itself is never transmitted over the modem.
 

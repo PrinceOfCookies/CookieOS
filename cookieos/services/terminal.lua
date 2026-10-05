@@ -15,6 +15,8 @@ local function printHelp()
     print("  security <level>      Set GREEN/YELLOW/RED/BLACK")
     print("  whois <user>          Show an auth user")
     print("  users                 List auth users")
+    print("  useradd <user> <0-5> [role]  Create a login")
+    print("  userdel <user>        Delete a login")
     print("  login [user]          Open an authenticated session")
     print("  logout                Revoke the current session")
     print("  whoami                Show the terminal identity")
@@ -141,6 +143,41 @@ function service.register(context)
                     printResponse(context.network:request("auth.credential.set", authorized({
                         target = { user = target, password = password },
                     })))
+                end
+            elseif command == "useradd" then
+                local username = words[2]
+                local level = tonumber(words[3])
+                local role = #words >= 4 and table.concat(words, " ", 4) or "User"
+                if not username or not level or level < 0 or level > 5 or level ~= math.floor(level) then
+                    printError("Usage: useradd <user> <clearance 0-5> [role]")
+                else
+                    write("Password for " .. username .. ": ")
+                    local password = read("*")
+                    write("Confirm password: ")
+                    local confirmation = read("*")
+                    if #password < 4 then printError("Password must be at least 4 characters")
+                    elseif password ~= confirmation then printError("Passwords do not match")
+                    else
+                        local response, err = context.network:request("auth.user.set", authorized({ target = {
+                            name = username, clearance = level, role = role, status = "Active",
+                            extraPermissions = {}, password = password,
+                        } }))
+                        if response and response.ok then print("Created login " .. username .. " (CL" .. level .. ", " .. role .. ")")
+                        else printResponse(response, err) end
+                    end
+                end
+            elseif command == "userdel" then
+                local username = words[2]
+                if not username then printError("Usage: userdel <user>")
+                elseif sessionUser and username:lower() == sessionUser:lower() then printError("You cannot delete your currently logged-in account")
+                else
+                    write("Delete login " .. username .. "? [y/N] ")
+                    local confirmation = read():lower()
+                    if confirmation == "y" or confirmation == "yes" then
+                        local response, err = context.network:request("auth.user.remove", authorized({ user = username }))
+                        if response and response.ok then print("Deleted login " .. tostring(response.data.removed))
+                        else printResponse(response, err) end
+                    else print("Cancelled") end
                 end
             elseif command == "where" and words[2] then
                 printResponse(context.network:request("players.lookup", authorized({ query = words[2] })))
