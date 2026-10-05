@@ -1,6 +1,7 @@
 local choices = {
     { "CraftOS shell", function() shell.run("shell") end },
-    { "Speaker music player", function() shell.run("/os/programs/PlayMusic") end },
+    { "Node information", function() shell.run("/programReplacements/screenfetch.lua") end },
+    { "Stage CookieSecurity update", function() shell.run("/cookieos-update.lua", "cookieos-v3-rewrite") end },
     { "Edit node configuration", function() shell.run("edit", "/cookieos-node.lua") end },
     { "Pair this node", function() shell.run("/pair-node.lua") end },
     { "Enroll a node (Command only)", function() shell.run("/command-enroll.lua") end },

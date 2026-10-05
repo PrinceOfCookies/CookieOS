@@ -52,6 +52,9 @@ function update.verifyManifest(manifest, signingKey)
         end
         if type(file.source) ~= "string" and type(file.url) ~= "string" then return nil, "Release entry has no source" end
     end
+    if type(manifest.remove) ~= "nil" and type(manifest.remove) ~= "table" then return nil, "Invalid obsolete release path list" end
+    local packaged = {}; for _, file in ipairs(manifest.files) do packaged[file.path] = true end
+    for _, path in ipairs(manifest.remove or {}) do if not validPath(path) or packaged[path] then return nil, "Unsafe obsolete release path" end end
     return true
 end
 
@@ -68,7 +71,7 @@ function update.stage(config, manifest, fetch)
         local written, writeError = writeFile(staged, contents)
         if not written then return nil, writeError end
     end
-    writeState(config.update.statePath, { status = "staged", version = manifest.version, files = manifest.files, attempts = 0 })
+    writeState(config.update.statePath, { status = "staged", version = manifest.version, files = manifest.files, remove = manifest.remove or {}, attempts = 0 })
     return true
 end
 
@@ -91,6 +94,13 @@ function update.apply(config)
         if fs.exists(target) then fs.delete(target) end
         fs.copy(staged, target)
     end
+    for _, target in ipairs(state.remove or {}) do
+        if fs.exists(target) then
+            local backup = fs.combine(config.update.backupPath, target:sub(2));local directory = fs.getDir(backup)
+            if directory ~= "" and not fs.exists(directory) then fs.makeDir(directory) end
+            fs.copy(target, backup);fs.delete(target)
+        end
+    end
     state.status, state.appliedAt, state.attempts = "pending", os.epoch("utc"), 0
     writeState(config.update.statePath, state)
     return true
@@ -108,6 +118,10 @@ function update.rollback(config)
             if directory ~= "" and not fs.exists(directory) then fs.makeDir(directory) end
             fs.copy(backup, target)
         end
+    end
+    for _, target in ipairs(state.remove or {}) do
+        local backup = fs.combine(config.update.backupPath, target:sub(2))
+        if fs.exists(backup) then local directory=fs.getDir(target);if directory~=""and not fs.exists(directory)then fs.makeDir(directory)end;if fs.exists(target)then fs.delete(target)end;fs.copy(backup,target)end
     end
     state.status = "rolled_back"
     writeState(config.update.statePath, state)

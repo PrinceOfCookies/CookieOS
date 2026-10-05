@@ -314,6 +314,9 @@ local function verifyManifest(manifest)
     if file.source~=nil and(type(file.source)~="string"or file.source:sub(1,1)=="/"or file.source:find("..",1,true))then error("Unsafe manifest source")end
     if type(file.source)~="string"and type(file.url)~="string"then error("Manifest entry has no source")end
   end
+  local packagedPaths={};for _,file in ipairs(manifest.files)do packagedPaths[file.path]=true end
+  if type(manifest.remove)~="nil"and type(manifest.remove)~="table"then error("Invalid obsolete path list")end
+  for _,path in ipairs(manifest.remove or{})do if not safePath(path)or packagedPaths[path]then error("Unsafe obsolete path")end end
   return key
 end
 local function stage(manifest,fetch)
@@ -336,12 +339,15 @@ local function apply(manifest)
       if fs.exists(target)then local dir=fs.getDir(old);if dir~=""and not fs.exists(dir)then fs.makeDir(dir)end;fs.copy(target,old)end
       table.insert(completed,target);if fs.exists(target)then fs.delete(target)end;local dir=fs.getDir(target);if dir~=""and not fs.exists(dir)then fs.makeDir(dir)end;fs.copy(staged,target)
     end
+    for _,target in ipairs(manifest.remove or{})do
+      local old=fs.combine(backup,target:sub(2));if fs.exists(target)then local dir=fs.getDir(old);if dir~=""and not fs.exists(dir)then fs.makeDir(dir)end;fs.copy(target,old);table.insert(completed,target);fs.delete(target)end
+    end
   end)
   if not ok then
     for _,target in ipairs(completed)do local old=fs.combine(backup,target:sub(2));if fs.exists(target)then fs.delete(target)end;if fs.exists(old)then fs.copy(old,target)end end
     error("Install failed and was rolled back: "..tostring(err))
   end
-  writeFile(INSTALL_ROOT.."/installed.db",textutils.serialize({version=manifest.version,files=manifest.files,installedAt=os.epoch("utc")}))
+  writeFile(INSTALL_ROOT.."/installed.db",textutils.serialize({version=manifest.version,files=manifest.files,remove=manifest.remove,installedAt=os.epoch("utc")}))
 end
 local function installStartup()
   if fs.exists("/startup.lua")and not fs.exists("/startup.lua.cookieos.bak")then fs.copy("/startup.lua","/startup.lua.cookieos.bak")end

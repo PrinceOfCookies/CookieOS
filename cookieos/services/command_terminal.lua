@@ -8,6 +8,8 @@ service.manifest = {
 function service.register(context)
     context.supervisor:add("command-terminal", function()
         if not shell or type(shell.run) ~= "function" then error("CraftOS shell API is unavailable") end
+        local path = shell.path()
+        if not path:find("/programReplacements", 1, true) then shell.setPath("/programReplacements:" .. path) end
         term.setBackgroundColor(colors.black)
         term.setTextColor(colors.white)
         term.clear()
@@ -23,6 +25,7 @@ function service.register(context)
         if not authenticated then error(authError or "Command access denied") end
         print("CL6 physical authentication accepted. Local unrestricted shell opened.")
         print("Use help for CraftOS commands. Filesystem changes are local and are not sent over the network.")
+        print("CookieSecurity tools: cs, nodeinfo, logs, update, recover, enroll, revoke")
         shell.run("shell")
         print("Command shell exited. Restarting...")
         sleep(1)

@@ -10,10 +10,13 @@ if (!version || !repository || !ref || !signingKey) {
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const output = resolve(root, outputArg);
-const includeRoots = ["cookieos"];
+const includeRoots = ["cookieos", "programReplacements"];
 const includeFiles = [
   "command-enroll.lua", "command-revoke.lua", "cookieos-update.lua", "cookiesecurity.lua", "install.lua", "pair-node.lua", "recovery.lua", "startup-v3.lua",
-  "os/programs/PlayMusic",
+];
+const obsoletePaths = [
+  "/os/programs/chat", "/os/programs/fileExplorer", "/os/programs/newPlay",
+  "/os/programs/playertracker", "/os/programs/PlayMusic", "/programReplacements/shell.lua",
 ];
 
 function walk(directory) {
@@ -75,7 +78,7 @@ const bundle = { format: 1, files: bundledFiles };
 const bundleJson = JSON.stringify(bundle);
 writeFileSync(join(output, "bundle.json"), bundleJson);
 
-const manifest = { version, repository, ref, bundle: "release/bundle.json", files };
+const manifest = { version, repository, ref, bundle: "release/bundle.json", files, remove: obsoletePaths };
 manifest.signature = createHmac("sha256", signingKey).update(canonical(manifest)).digest("hex");
 const manifestJson = JSON.stringify(manifest, null, 2);
 writeFileSync(join(output, "manifest.json"), manifestJson);

@@ -139,11 +139,13 @@ separately before deleting configuration or CookieOS data.
 The original CookieOS remains on the repository's `main` branch. The distributed v3
 work lives on `cookieos-v3-rewrite`; it has not overwritten `main`.
 
-The v3 release is currently a new runtime and boot path, not a completed port of the
-original graphical shell. The old `os/`, `startup/`, `programReplacements/`, and
-`apis/` trees remain in source control but are intentionally not copied by the v3
-release installer. If v3 replaces an existing `/startup.lua`, the installer saves it
-as `/startup.lua.cookieos.bak`; uninstall restores that backup.
+The v3 release is a new runtime and boot path. The obsolete `os/` programs and the
+legacy `cosUtils`-based replacements are removed during upgrade. A small maintained
+`programReplacements/` toolkit is installed for the authenticated Command shell
+(`cs`, `nodeinfo`, `logs`, `update`, `recover`, `enroll`, and `revoke`). If v3 replaces
+an existing `/startup.lua`, the installer saves it as `/startup.lua.cookieos.bak`;
+uninstall restores that backup. Obsolete files are backed up before removal and are
+restored by rollback if an update fails.
 
 Do not assume the classic interface and v3 runtime are a finished dual-boot system.
 Preserve an original installation or use the `main` branch until the classic UI is

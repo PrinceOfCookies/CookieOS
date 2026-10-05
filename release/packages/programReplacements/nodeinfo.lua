@@ -1,0 +1,2 @@
+shell.run("/programReplacements/screenfetch.lua")
+if fs.exists("/cookieos-data/command-authority.db") then local h=fs.open("/cookieos-data/command-authority.db","r");local s=h and textutils.unserialize(h.readAll());if h then h.close()end;if type(s)=="table"then print("Lockdown: "..tostring(s.locked==true).."  generation "..tostring(s.generation or 0));if s.reason then print("Reason:   "..tostring(s.reason))end end end

@@ -1,5 +1,5 @@
 {
-  "version": "3.7.0-dev.27f69b9",
+  "version": "3.7.1-dev-cleanup",
   "repository": "PrinceOfCookies/CookieOS",
   "ref": "cookieos-v3-rewrite",
   "bundle": "release/bundle.json",
@@ -97,7 +97,7 @@
     {
       "path": "/cookieos/services/command_terminal.lua",
       "source": "release/packages/cookieos/services/command_terminal.lua",
-      "sha256": "09fef969dcacb16de8ec7cf370beec0aad4329fb1f3ee65a175a0320253d52b3"
+      "sha256": "1126f4131b4eee6044f6bfbcd4c119a1c3fb77417fad571b93ac5f2984aecda2"
     },
     {
       "path": "/cookieos/services/events.lua",
@@ -182,27 +182,87 @@
     {
       "path": "/cookieos/update.lua",
       "source": "release/packages/cookieos/update.lua",
-      "sha256": "91e7aa904b1904086455617bdaee83634bb8d4a3886daab8296d63a514b345d6"
+      "sha256": "9f1752b2d82f28cc01abb919d3466ee819999ceca27ef382d2c2ce4b77697039"
     },
     {
       "path": "/cookiesecurity.lua",
       "source": "release/packages/cookiesecurity.lua",
-      "sha256": "ec94bdc4250d33550e16dac78bf917565f98219d9e3e2708a20d55ba579afd96"
+      "sha256": "7f4691846753b0bafd1960607f5bf20ab425e6012f539ef8d22ae8e342a73a69"
     },
     {
       "path": "/install.lua",
       "source": "release/packages/install.lua",
-      "sha256": "1cb479c2c86fece19078df460c32fcbc8ab6348c386f070128cd6bc849240867"
-    },
-    {
-      "path": "/os/programs/PlayMusic",
-      "source": "release/packages/os/programs/PlayMusic",
-      "sha256": "1a1348186c4d6930ceb260f834bfc15d7976eff919b05b7d98f102d08216d37b"
+      "sha256": "3a5e7543956da22d72398bb5a95e37c56678596cc71129f546e3e4546cc1fc58"
     },
     {
       "path": "/pair-node.lua",
       "source": "release/packages/pair-node.lua",
       "sha256": "fd448d7808595ae3cca7e7d4197595966cf81f46cd5de6bcfd1ebabaa45c3d5f"
+    },
+    {
+      "path": "/programReplacements/about.lua",
+      "source": "release/packages/programReplacements/about.lua",
+      "sha256": "2b1e3f36185651c204851c7c84e06baaa148adcb3d83c793a03a6d53bfa54bf0"
+    },
+    {
+      "path": "/programReplacements/cs.lua",
+      "source": "release/packages/programReplacements/cs.lua",
+      "sha256": "d01436a960c490afe6864dd01aee6cb640ca26c490f779f8e65188fe105f35c7"
+    },
+    {
+      "path": "/programReplacements/enroll.lua",
+      "source": "release/packages/programReplacements/enroll.lua",
+      "sha256": "a45f94e38b690333fea892ea27f3a5cba8262d6a09ead8f895781df961e30104"
+    },
+    {
+      "path": "/programReplacements/list.lua",
+      "source": "release/packages/programReplacements/list.lua",
+      "sha256": "5770cd2689a4701f72fa87e95cb94b688f80f301937084b45292e11ca6cab07e"
+    },
+    {
+      "path": "/programReplacements/logs.lua",
+      "source": "release/packages/programReplacements/logs.lua",
+      "sha256": "9b6010bcee3957af9c8bcd182848d8d5e33df25fb8288dc9fe2f1ab7c3de12a9"
+    },
+    {
+      "path": "/programReplacements/ls.lua",
+      "source": "release/packages/programReplacements/ls.lua",
+      "sha256": "d78ac57d4949fd272d87ef7a611cb4fe074b42ba3e4b526e88109058d60c36ce"
+    },
+    {
+      "path": "/programReplacements/nodeinfo.lua",
+      "source": "release/packages/programReplacements/nodeinfo.lua",
+      "sha256": "01c72ffbfebd4ff7cbadb1fd8825b8c902a1b664b427c8c1c212842d2858e307"
+    },
+    {
+      "path": "/programReplacements/reboot.lua",
+      "source": "release/packages/programReplacements/reboot.lua",
+      "sha256": "7dab1e262bd197343ea21fd0f61b4973bde1b2ce9a599c45f3c5fa2f5253b44d"
+    },
+    {
+      "path": "/programReplacements/recover.lua",
+      "source": "release/packages/programReplacements/recover.lua",
+      "sha256": "24f61197e18274c77d245b1ecd3791b171c91e64cbb026feef0064503d62a6b8"
+    },
+    {
+      "path": "/programReplacements/revoke.lua",
+      "source": "release/packages/programReplacements/revoke.lua",
+      "sha256": "fba6a4b7ddce7330326a5628ecf54b3868e6ac50c0a96e283585279df1aa9a4e"
+    },
+    {
+      "path": "/programReplacements/screenfetch.lua",
+      "source": "release/packages/programReplacements/screenfetch.lua",
+      "sha256": "adfa751df9bda2e08326fec8dd149c1a4b64e9f46d5a802ba8b1d2ab28ed046a"
+    },
+    {
+      "path": "/programReplacements/shutdown.lua",
+      "source": "release/packages/programReplacements/shutdown.lua",
+      "sha256": "445dc39513a4b8ec431be4892edde4e1ac7554a79b77161d9720799a77081378"
+    },
+    {
+      "path": "/programReplacements/update.lua",
+      "source": "release/packages/programReplacements/update.lua",
+      "sha256": "b5357a784dfa4ffcfd04ca32404465d16aa690962092679d76bc766010b132f5"
     },
     {
       "path": "/recovery.lua",
@@ -215,5 +275,13 @@
       "sha256": "eea2e45c262c07902cb2a22328932cd81b90003663c3442c8e40660bc5541068"
     }
   ],
-  "signature": "5bd83ae256aa7dc8f8a5ac5a5b3b57f8d32086836da398a6b826ebbc980853ff"
+  "remove": [
+    "/os/programs/chat",
+    "/os/programs/fileExplorer",
+    "/os/programs/newPlay",
+    "/os/programs/playertracker",
+    "/os/programs/PlayMusic",
+    "/programReplacements/shell.lua"
+  ],
+  "signature": "a0e6711d12135685ac132ed3ebd233f78c1053664b2f78fc97b10b4db2a709f1"
 }
