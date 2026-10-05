@@ -42,6 +42,7 @@ local defaults = {
         required = false,
         node = nil,
         radius = 6,
+        debug = true,
         statePath = "/cookieos-data/command-authority.db",
     },
     audit = {

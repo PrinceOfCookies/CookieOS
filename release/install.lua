@@ -228,7 +228,7 @@ local function wizard(roleName,existing)
       position={x=tonumber(ask("X")),y=tonumber(ask("Y")),z=tonumber(ask("Z"))}
       if not position.x or not position.y or not position.z then error("Valid Command Authority coordinates are required")end
     end
-    config.commandAuthority={authority=true,user=user,radius=tonumber(ask("Physical access radius","6"))or 6,
+    config.commandAuthority={authority=true,user=user,radius=tonumber(ask("Physical access radius","6"))or 6,debug=true,
       position=position,credential=credential(password,"normal"),overrideCredential=credential(override,"override")}
     local peers=ask("Backup Command Authority nodes (comma separated, optional)","")
     config.commandCluster={peers={},quorum=1,priority=tonumber(ask("Authority priority (higher wins)","100"))or 100}

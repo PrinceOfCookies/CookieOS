@@ -1,5 +1,5 @@
 {
-  "version": "3.7.1-dev.382c991",
+  "version": "3.7.1-dev.23138d7",
   "repository": "PrinceOfCookies/CookieOS",
   "ref": "cookieos-v3-rewrite",
   "bundle": "release/bundle.json",
@@ -22,7 +22,7 @@
     {
       "path": "/cookieos/config.lua",
       "source": "release/packages/cookieos/config.lua",
-      "sha256": "d97636c5556b5e025342bb39485bc20af43b24373fa1a8d9272ea1c8c0749a52"
+      "sha256": "da3cbaff613c3c987ee6cb68823d2bb0d929514bd3864dfe25b93c97274999b9"
     },
     {
       "path": "/cookieos/crypto/box.lua",
@@ -92,12 +92,12 @@
     {
       "path": "/cookieos/services/command_authority.lua",
       "source": "release/packages/cookieos/services/command_authority.lua",
-      "sha256": "f652542b5fd7f30f8e2a967296f7a9581215acc8cd9258fd9572e587b6660b6a"
+      "sha256": "31d08d0bc0cb739ed169deba9208f5bfa03ba0f36379902bade73eb18c2d2bd6"
     },
     {
       "path": "/cookieos/services/command_terminal.lua",
       "source": "release/packages/cookieos/services/command_terminal.lua",
-      "sha256": "1126f4131b4eee6044f6bfbcd4c119a1c3fb77417fad571b93ac5f2984aecda2"
+      "sha256": "8453736415fdd76bd7d6e5b829e88165a2dc05c2fc59e7b9f6ba48edeebfc57e"
     },
     {
       "path": "/cookieos/services/events.lua",
@@ -192,7 +192,7 @@
     {
       "path": "/install.lua",
       "source": "release/packages/install.lua",
-      "sha256": "3a5e7543956da22d72398bb5a95e37c56678596cc71129f546e3e4546cc1fc58"
+      "sha256": "2ecf4928d4044760041b5528eed6ae6dc83c693f09388e72fdd32597eab5aaef"
     },
     {
       "path": "/pair-node.lua",
@@ -283,5 +283,5 @@
     "/os/programs/PlayMusic",
     "/programReplacements/shell.lua"
   ],
-  "signature": "8a3b71b464922e50cf01827c674f49d0c8f941a803f0cb33e23bcad563779377"
+  "signature": "bfed3db33ec324bd88abbffeae4437e1668dc11ce83e31c33d16c403053bf762"
 }
