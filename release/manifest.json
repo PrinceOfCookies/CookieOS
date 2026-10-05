@@ -1,5 +1,5 @@
 {
-  "version": "3.6.0-dev.53160eb",
+  "version": "3.7.0-dev.0ff313a",
   "repository": "PrinceOfCookies/CookieOS",
   "ref": "cookieos-v3-rewrite",
   "bundle": "release/bundle.json",
@@ -22,7 +22,7 @@
     {
       "path": "/cookieos/config.lua",
       "source": "release/packages/cookieos/config.lua",
-      "sha256": "3098450017ee70fe9006bca9edb9ba02cb5f1f072c3ecfb77891b178b2362ab7"
+      "sha256": "d97636c5556b5e025342bb39485bc20af43b24373fa1a8d9272ea1c8c0749a52"
     },
     {
       "path": "/cookieos/crypto/box.lua",
@@ -38,6 +38,11 @@
       "path": "/cookieos/crypto/sha256.lua",
       "source": "release/packages/cookieos/crypto/sha256.lua",
       "sha256": "e717caeb3193e30d352a0e8d389c609a9d425f0e97e333cd00b262392fb7b8ab"
+    },
+    {
+      "path": "/cookieos/extensions.lua",
+      "source": "release/packages/cookieos/extensions.lua",
+      "sha256": "44a789c05f1911ab2830eb15daa71ecac4aa048e1b540481fde4f86761e92e10"
     },
     {
       "path": "/cookieos/github.lua",
@@ -62,27 +67,27 @@
     {
       "path": "/cookieos/runtime.lua",
       "source": "release/packages/cookieos/runtime.lua",
-      "sha256": "3e59a80535a37b85882e4c69cb10d592c46b89467859db7acaf716c13ead1341"
+      "sha256": "d12a3d4d7db713a007e11c6dcccdbe55383e8efefd4de482b91f062f3c030166"
     },
     {
       "path": "/cookieos/services/audio.lua",
       "source": "release/packages/cookieos/services/audio.lua",
-      "sha256": "1cc737cee33eb0160e4a35ab0d0cf19b0245eba9b71224a99e18f411a9a9d38f"
+      "sha256": "b7e221c5c5f6c0d70e0410360fa9a3514ffafdda2793d9509a8d1d12d5d5e6e7"
     },
     {
       "path": "/cookieos/services/audit.lua",
       "source": "release/packages/cookieos/services/audit.lua",
-      "sha256": "7fe1fd0400e8b3ed376c0e260d9b6c6d3fff500298c93d956078355ce07c214b"
+      "sha256": "434f4d4f550d66d3187d504ce42be2772e1e71070968b0d38d38b7d2791efe28"
     },
     {
       "path": "/cookieos/services/auth.lua",
       "source": "release/packages/cookieos/services/auth.lua",
-      "sha256": "060e97faf1a88c9a2da35cefc62cde7ab7982ab7016639bfd6336155f03210fd"
+      "sha256": "e19806af363ac10f93ffb64b77d16488922b502f0b4611722e2fa5b9f43c7adc"
     },
     {
       "path": "/cookieos/services/chat.lua",
       "source": "release/packages/cookieos/services/chat.lua",
-      "sha256": "aede7d06fa1fbe442101108718e9fe0dcc25ca7c45417b06f98ab40b00f8166c"
+      "sha256": "3e61945b77a7418b2a7837ab57104b854e8696dd1f2e1e4d4ca2c4c73eb5b73d"
     },
     {
       "path": "/cookieos/services/command_authority.lua",
@@ -117,7 +122,12 @@
     {
       "path": "/cookieos/services/operations.lua",
       "source": "release/packages/cookieos/services/operations.lua",
-      "sha256": "ae212a57f08b705747a3e30ae909b2ca3538d60dfba7004fbdc3328c6a65a3eb"
+      "sha256": "9beec368d6fef569c109d29fa813788d27e081d22f63240776bdd90c63c5807f"
+    },
+    {
+      "path": "/cookieos/services/orchestration.lua",
+      "source": "release/packages/cookieos/services/orchestration.lua",
+      "sha256": "4bbb18ac3948d0145229c0b99bbfa1ea96cf2e41aec02d11a96fddcefd425c13"
     },
     {
       "path": "/cookieos/services/pairing.lua",
@@ -147,7 +157,7 @@
     {
       "path": "/cookieos/services/terminal.lua",
       "source": "release/packages/cookieos/services/terminal.lua",
-      "sha256": "5814e90d9d2417c37386c7ac67ec2b826bb86fb8dfa10c6211591b35ec3afed2"
+      "sha256": "9539b354046619c2df8e22bba031c73ac4d84155dcf258f707ef639042dd8e52"
     },
     {
       "path": "/cookieos/supervisor.lua",
@@ -158,6 +168,11 @@
       "path": "/cookieos/trust.lua",
       "source": "release/packages/cookieos/trust.lua",
       "sha256": "f70ddc40723f472aa551375a33763ca198375ae3dffe5fb4c1cb2644f195ceae"
+    },
+    {
+      "path": "/cookieos/ui/command_center.lua",
+      "source": "release/packages/cookieos/ui/command_center.lua",
+      "sha256": "579c949f5fe523ba9d12e47fa87f09ee583d67a2140d2ea09895072bc3731ee3"
     },
     {
       "path": "/cookieos/ui/monitor.lua",
@@ -177,7 +192,7 @@
     {
       "path": "/install.lua",
       "source": "release/packages/install.lua",
-      "sha256": "d27492e2acdddb91f4900708fce4c545890da21ea42099daa458fee66cc50159"
+      "sha256": "1cb479c2c86fece19078df460c32fcbc8ab6348c386f070128cd6bc849240867"
     },
     {
       "path": "/os/programs/PlayMusic",
@@ -200,5 +215,5 @@
       "sha256": "eea2e45c262c07902cb2a22328932cd81b90003663c3442c8e40660bc5541068"
     }
   ],
-  "signature": "58bf60a87ea51e3804ab36e3e10d0bfedcd40a0e05ecb4ba26b81bbc2b5b83f7"
+  "signature": "b26e44b4b96c923c64b9c20b4f0c8163d4886ea816bcf2cc58287ebe3bc321bd"
 }

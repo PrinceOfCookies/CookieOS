@@ -102,7 +102,10 @@ function service.register(context)
         local results = {}
         for _, action in ipairs(actions or {}) do
             local kind = tostring(action.type or "")
-            if kind == "security" and context.security then
+            if context.orchestration and context.orchestration.state.simulation.active then
+                results[#results + 1] = { type = kind, simulated = true }
+                context.publish("simulation.action", { source = source, action = copy(action) })
+            elseif kind == "security" and context.security then
                 local changed, err = context.security.setInternal(action.level, "automation:" .. tostring(source))
                 results[#results + 1] = { type = kind, accepted = changed ~= nil, level = action.level, error = err }
             elseif kind == "lock-zone" or kind == "unlock-zone" then
@@ -233,6 +236,9 @@ function service.register(context)
         local door = state.doors[tostring(payload.id or "")]; if not door then return nil, "Door not found" end
         local clearance = type(identity) == "table" and tonumber(identity.clearance) or 0
         if clearance < (door.clearance or 1) then return nil, "Insufficient clearance for this door" end
+        local zoneAllowed = false
+        for _, zone in ipairs(type(identity) == "table" and identity.zones or {}) do if zone == "*" or zone == door.zone then zoneAllowed = true end end
+        if not zoneAllowed then return nil, "Credential is not valid for this zone" end
         setDoor(door, false); save(); audit("access.granted", payload, packet, { id = door.id }); emit("access.granted", { id = door.id, zone = door.zone })
         return { granted = true, door = copy(door) }
     end)
@@ -247,6 +253,7 @@ function service.register(context)
         state.rooms[id] = { id = id, name = tostring(payload.name or id), floor = tonumber(payload.floor) or 0,
             x = tonumber(payload.x) or 1, y = tonumber(payload.y) or 1, width = math.max(1, tonumber(payload.width) or 5),
             height = math.max(1, tonumber(payload.height) or 3), zone = tostring(payload.zone or "default"), color = tonumber(payload.color) }
+        if type(payload.world)=="table"and tonumber(payload.world.x1)and tonumber(payload.world.x2)and tonumber(payload.world.z1)and tonumber(payload.world.z2)then state.rooms[id].world={x1=tonumber(payload.world.x1),x2=tonumber(payload.world.x2),z1=tonumber(payload.world.z1),z2=tonumber(payload.world.z2)}end
         save(); audit("map.room.set", payload, packet, { id = id }); emit("map.changed", { id = id }); return copy(state.rooms[id])
     end)
     context.network:provide("map.room.remove", function(payload, packet)

@@ -35,6 +35,7 @@ local defaults = {
         passwordRounds = 64,
         maxLoginFailures = 5,
         loginLockSeconds = 30,
+        passwordMaxAgeDays = 90,
         delegates = {},
     },
     commandAuthority = {
@@ -86,6 +87,12 @@ local defaults = {
         peers = {},
         quorum = 1,
         priority = 100,
+    },
+    orchestration = {
+        dataPath = "/cookieos-data/orchestration.db",
+    },
+    extensions = {
+        modules = {},
     },
 }
 

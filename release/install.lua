@@ -171,13 +171,13 @@ end
 local presets={
   {name="Auth terminal",mode="client",services={"node","fleet-agent","terminal"}},
   {name="Command Authority",mode="server",services={"node","fleet-agent","command-authority","command-terminal"},requires={"speaker","playerDetector"}},
-  {name="Auth/core server",mode="server",services={"node","fleet-agent","auth","audit","events","personnel","security","maintenance","operations","terminal"}},
+  {name="Auth/core server",mode="server",services={"node","fleet-agent","auth","audit","events","personnel","security","maintenance","operations","orchestration","terminal"}},
   {name="Player tracker",mode="server",services={"node","fleet-agent","player-tracker","maintenance"},requires="player_detector"},
   {name="Speaker zone",mode="server",services={"node","fleet-agent","audio","maintenance"},requires="speaker"},
   {name="Chat gateway",mode="server",services={"node","fleet-agent","chat","maintenance"},requires="chatBox"},
   {name="Access controller",mode="server",services={"node","fleet-agent","operations","maintenance"}},
   {name="Relay",mode="relay",services={"node","fleet-agent"}},
-  {name="Hybrid core + relay",mode="hybrid",services={"node","fleet-agent","auth","audit","events","personnel","security","maintenance","operations","terminal"}},
+  {name="Hybrid core + relay",mode="hybrid",services={"node","fleet-agent","auth","audit","events","personnel","security","maintenance","operations","orchestration","terminal"}},
   {name="Custom node",mode="client",services={"node"}},
 }
 local function randomKey(node)return sha256(node..":"..os.epoch("utc")..":"..math.random()..":"..math.random())end
@@ -259,6 +259,10 @@ local function wizard(roleName,existing)
   end
   if found.monitor and isAuthority and yes("Enable personnel monitor display?",false)then
     table.insert(config.services,"personnel-display");config.personnelDisplay={side=found.monitor[1],textScale=0.5}
+  end
+  if isAuthority then
+    local modules=ask("Extension modules (comma separated, optional)","");config.extensions={modules={}}
+    for moduleName in modules:gmatch("[^,%s]+")do table.insert(config.extensions.modules,moduleName)end
   end
   if not isCommand and flag("--reconfigure")then config.pairing=nil end
   return config

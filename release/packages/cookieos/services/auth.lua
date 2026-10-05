@@ -5,7 +5,8 @@ service.manifest = {
     name = "auth", version = "3.1.0",
     provides = {
         "auth.check", "auth.whois", "auth.users.list", "auth.user.set", "auth.user.remove",
-        "auth.permission.add", "auth.permission.remove", "auth.credential.set",
+        "auth.permission.add", "auth.permission.remove", "auth.credential.set", "auth.user.policy", "auth.credential.revoke",
+        "auth.pass.issue", "auth.pass.redeem", "auth.approval.request", "auth.approval.approve", "auth.approval.status",
         "auth.session.challenge", "auth.session.open", "auth.session.validate", "auth.session.logout", "auth.authorize",
     },
 }
@@ -45,6 +46,15 @@ local defaultPermissions = {
     ["map.view"] = 1,
     ["map.manage"] = 4,
     ["announcements.send"] = 3,
+    ["policy.view"] = 2, ["policy.apply"] = 4, ["policy.manage"] = 5,
+    ["alarms.view"] = 1, ["alarms.ack"] = 2, ["alarms.manage"] = 4,
+    ["devices.view"] = 2, ["devices.manage"] = 4,
+    ["workflows.view"] = 2, ["workflows.manage"] = 4,
+    ["notifications.view"] = 1, ["notifications.subscribe"] = 1, ["notifications.send"] = 3,
+    ["tasks.view"] = 1, ["tasks.update"] = 1, ["tasks.manage"] = 3,
+    ["simulation.view"] = 2, ["simulation.manage"] = 5,
+    ["extensions.view"] = 2, ["extensions.call"] = 4,
+    ["audit.export"] = 5, ["approvals.request"] = 4, ["approvals.approve"] = 5,
     ["command.access"] = 6,
     ["command.override"] = 6,
 }
@@ -76,6 +86,11 @@ local function normalizeUser(user)
     user.extraPermissions = type(user.extraPermissions) == "table" and user.extraPermissions or {}
     user.lastSeen = user.lastSeen or "Never"
     user.securityNote = tostring(user.securityNote or "")
+    user.zones = type(user.zones) == "table" and user.zones or { "*" }
+    user.schedule = type(user.schedule) == "table" and user.schedule or nil
+    user.expiresAt = tonumber(user.expiresAt)
+    user.mustChangePassword = user.mustChangePassword == true
+    user.credentialRevoked = user.credentialRevoked == true
     return user
 end
 
@@ -86,6 +101,7 @@ function service.register(context)
     local sessions = {}
     local challenges = {}
     local loginFailures = {}
+    local passes, approvals = {}, {}
     local permissions = copy(defaultPermissions)
     for name, required in pairs(options.permissions or {}) do permissions[name] = required end
 
@@ -137,6 +153,7 @@ function service.register(context)
         local rounds = tonumber(options.passwordRounds) or 64
         local salt = Sha256.hex(table.concat({ context.config.node, os.epoch("utc"), math.random(), math.random() }, ":")):sub(1, 32)
         user.credential = { salt = salt, rounds = rounds, hash = passwordHash(password, salt, rounds) }
+        user.passwordChangedAt = os.epoch("utc")
         user.password = nil
     end
 
@@ -192,11 +209,21 @@ function service.register(context)
     end
 
     local function isFired(user)
-        return user and normalize(user.status) == "fired"
+        return user and (normalize(user.status) == "fired" or user.credentialRevoked == true
+            or (user.expiresAt and user.expiresAt <= os.epoch("utc")))
     end
 
     local function hasPermission(user, permission)
         if not user or isFired(user) then return false end
+        if user.mustChangePassword and permission ~= "auth.manage" then return false end
+        if tonumber(options.passwordMaxAgeDays) and tonumber(options.passwordMaxAgeDays)>0 and user.passwordChangedAt
+            and os.epoch("utc")-user.passwordChangedAt>(tonumber(options.passwordMaxAgeDays)*86400000) and permission~="auth.manage" then return false end
+        if user.schedule and user.schedule.startHour and user.schedule.endHour and os.date then
+            local hour = tonumber(os.date("!%H")) or 0
+            local first, last = tonumber(user.schedule.startHour) or 0, tonumber(user.schedule.endHour) or 24
+            local inside = first <= last and hour >= first and hour < last or first > last and (hour >= first or hour < last)
+            if not inside then return false end
+        end
         for _, extra in ipairs(user.extraPermissions) do
             if extra == "all" or extra == permission then return true end
         end
@@ -219,6 +246,7 @@ function service.register(context)
             requiredClearance = required,
             role = user.role,
             status = user.status,
+            zones = copy(user.zones),
         }
     end
 
@@ -268,6 +296,8 @@ function service.register(context)
             lastSeen = user.lastSeen, securityNote = user.securityNote,
             extraPermissions = copy(user.extraPermissions),
             permissions = effectivePermissions,
+            zones = copy(user.zones), schedule = copy(user.schedule), expiresAt = user.expiresAt,
+            mustChangePassword = user.mustChangePassword, credentialRevoked = user.credentialRevoked,
         }
     end
 
@@ -295,6 +325,11 @@ function service.register(context)
                 return normalize(a.name) < normalize(b.name)
             end)
             return result
+        end,
+        consumeApproval = function(id, action)
+            local approval = approvals[tostring(id or "")]
+            if not approval or approval.action ~= action or approval.status ~= "approved" or approval.expiresAt <= os.epoch("utc") then return nil, "A valid two-person approval is required" end
+            approval.status = "consumed"; approval.consumedAt = os.epoch("utc"); return true
         end,
     }
 
@@ -473,14 +508,15 @@ function service.register(context)
     context.network:provide("auth.permission.remove", function(payload, packet) return changePermission(payload, packet, true) end)
 
     context.network:provide("auth.credential.set", function(payload, packet)
-        local actor, err = authorizeCall(payload, packet, "auth.manage")
-        if not actor then return nil, err end
         local target = payload.target or payload
         local name, user = findUser(target.name or target.user)
+        local actor = caller(payload, packet)
+        if not actor or not name or normalize(actor)~=normalize(name) then local managed,err=authorizeCall(payload,packet,"auth.manage");if not managed then return nil,err end;actor=managed end
         local password = tostring(target.password or "")
         if not user then return nil, "User not found" end
         if #password < 4 then return nil, "Password must be at least 4 characters" end
         setCredential(user, password)
+        user.mustChangePassword = false; user.credentialRevoked = false; user.passwordChangedAt = os.epoch("utc")
         for token, session in pairs(sessions) do
             if session.user == name then sessions[token] = nil end
         end
@@ -489,6 +525,43 @@ function service.register(context)
         context.log.info(actor .. " changed credentials for " .. name)
         audit("auth.credential.set", { actor = actor, details = { user = name } })
         return { user = name, credentialUpdated = true }
+    end)
+    context.network:provide("auth.user.policy",function(payload,packet)
+        local actor,err=authorizeCall(payload,packet,"auth.manage");if not actor then return nil,err end local name,user=findUser(payload.user or payload.name);if not user then return nil,"User not found"end
+        if payload.zones then user.zones=copy(payload.zones)end;if payload.expiresAt~=nil then user.expiresAt=tonumber(payload.expiresAt)end;if payload.schedule~=nil then user.schedule=copy(payload.schedule)end;if payload.mustChangePassword~=nil then user.mustChangePassword=payload.mustChangePassword==true end
+        local ok,saveError=save();if not ok then return nil,saveError end;audit("auth.user.policy",{actor=actor,details={user=name}});return publicUser(name,user)
+    end)
+    context.network:provide("auth.credential.revoke",function(payload,packet)
+        local actor,err=authorizeCall(payload,packet,"auth.manage");if not actor then return nil,err end local name,user=findUser(payload.user or payload.name);if not user then return nil,"User not found"end
+        user.credentialRevoked=true;for token,active in pairs(sessions)do if active.user==name then sessions[token]=nil end end;local ok,saveError=save();if not ok then return nil,saveError end;audit("auth.credential.revoke",{actor=actor,details={user=name}});return{user=name,revoked=true}
+    end)
+
+    context.network:provide("auth.pass.issue", function(payload, packet)
+        local actor, err = authorizeCall(payload, packet, "auth.manage"); if not actor then return nil, err end
+        local alphabet="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";local chars={};for i=1,12 do local at=math.random(1,#alphabet);chars[i]=alphabet:sub(at,at)end
+        local code=table.concat(chars);local digest=Sha256.hmac(context.config.identity.nodeKey or"CookieOS",code)
+        passes[digest]={clearance=math.max(0,math.min(5,tonumber(payload.clearance)or 1)),zones=copy(payload.zones or{"*"}),expiresAt=os.epoch("utc")+math.max(60000,math.min(86400000,tonumber(payload.seconds or 3600)*1000)),issuedBy=actor}
+        audit("auth.pass.issue",{actor=actor,details={expiresAt=passes[digest].expiresAt,clearance=passes[digest].clearance}});return{code=code,expiresAt=passes[digest].expiresAt,oneTime=true}
+    end)
+    context.network:provide("auth.pass.redeem", function(payload, packet)
+        local digest=Sha256.hmac(context.config.identity.nodeKey or"CookieOS",tostring(payload.code or""):upper():gsub("[%s%-]",""));local pass=passes[digest]
+        if not pass or pass.expiresAt<=os.epoch("utc")then return nil,"Invalid or expired one-time pass"end;passes[digest]=nil
+        local source=packet and packet.source or"unknown";local token=Sha256.hmac(context.config.identity.nodeKey or tostring(math.random()),digest..":"..source..":"..os.epoch("utc"));local name="visitor-"..token:sub(1,8)
+        users[name]=normalizeUser({clearance=pass.clearance,role="Visitor",status="Visitor",zones=pass.zones,expiresAt=pass.expiresAt,extraPermissions={}})
+        sessions[token]={user=name,node=source,createdAt=os.epoch("utc"),lastSeen=os.epoch("utc"),expiresAt=pass.expiresAt};return{token=token,user=name,role="Visitor",clearance=pass.clearance,expiresAt=pass.expiresAt,zones=copy(pass.zones)}
+    end)
+    context.network:provide("auth.approval.request", function(payload, packet)
+        local actor,err=authorizeCall(payload,packet,"approvals.request");if not actor then return nil,err end
+        local id=Sha256.hex(actor..":"..tostring(payload.action)..":"..os.epoch("utc")..":"..math.random()):sub(1,16)
+        approvals[id]={id=id,action=tostring(payload.action or""),requestedBy=actor,status="pending",expiresAt=os.epoch("utc")+300000};return copy(approvals[id])
+    end)
+    context.network:provide("auth.approval.approve", function(payload, packet)
+        local actor,err=authorizeCall(payload,packet,"approvals.approve");if not actor then return nil,err end local approval=approvals[tostring(payload.id or"")]
+        if not approval or approval.expiresAt<=os.epoch("utc")then return nil,"Approval not found or expired"end;if normalize(actor)==normalize(approval.requestedBy)then return nil,"A different administrator must approve"end
+        approval.approvedBy=actor;approval.approvedAt=os.epoch("utc");approval.status="approved";audit("auth.approval.approve",{actor=actor,details={id=approval.id,action=approval.action}});return copy(approval)
+    end)
+    context.network:provide("auth.approval.status", function(payload, packet)
+        local actor,err=authorizeCall(payload,packet,"approvals.request");if not actor then return nil,err end local approval=approvals[tostring(payload.id or"")];if not approval then return nil,"Approval not found"end return copy(approval)
     end)
 end
 

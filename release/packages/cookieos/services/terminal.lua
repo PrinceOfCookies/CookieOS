@@ -50,6 +50,22 @@ local function printHelp()
     print("  fleet                Show rollout plans")
     print("  fleet status <node>  Show a node's update state")
     print("  fleet stage <node> [ref] | apply <node> | rollback <node>")
+    print("  console               Open graphical Command Center")
+    print("  passissue <CL> [seconds] | passlogin <code>")
+    print("  userpolicy <user> <zones|*> [expiry-epoch]")
+    print("  credrevoke <user>      Revoke lost credentials")
+    print("  forcepasswd <user>     Require a password change")
+    print("  approve request <action> | approve <id>")
+    print("  policies | policy <id>")
+    print("  alarms | alarmx <pattern> [message] | drill <pattern>")
+    print("  devices | devname <peripheral> <label>")
+    print("  workflows | workflow <id> | step <run-id>")
+    print("  notify <severity> <message>")
+    print("  tasks | task <id> <owner> <title> | taskdone <id>")
+    print("  patrol <route> <checkpoint>")
+    print("  sim <start|stop|status> [name]")
+    print("  auditfind <query> | auditverify | auditexport [path]")
+    print("  extensions | ext <name> <action> [data]")
 end
 
 local function friendlyError(message)
@@ -324,6 +340,43 @@ function service.register(context)
                 printResponse(context.network:requestTo(words[3], "fleet.agent.rollback", authorized(), 10))
             elseif command == "fleet" then
                 printResponse(context.network:request("fleet.status", authorized()))
+            elseif command == "console" then
+                if not session then printError("Run login first.") else local ok,err=require("cookieos.ui.command_center").run(context,authorized,words[2]);if not ok then printError(err)end end
+            elseif command == "passissue" and tonumber(words[2]) then
+                printResponse(context.network:request("auth.pass.issue",authorized({clearance=tonumber(words[2]),seconds=tonumber(words[3])or 3600})))
+            elseif command == "passlogin" and words[2] then
+                local response,err=context.network:request("auth.pass.redeem",{code=words[2]});if response and response.ok then session=response.data.token;sessionUser=response.data.user;print("Visitor pass accepted as "..sessionUser)else printResponse(response,err)end
+            elseif command == "userpolicy" and words[2] and words[3] then
+                local zones={};for zone in words[3]:gmatch("[^,]+")do zones[#zones+1]=zone end;printResponse(context.network:request("auth.user.policy",authorized({user=words[2],zones=zones,expiresAt=tonumber(words[4])})))
+            elseif command == "credrevoke" and words[2] then printResponse(context.network:request("auth.credential.revoke",authorized({user=words[2]})))
+            elseif command == "forcepasswd" and words[2] then printResponse(context.network:request("auth.user.policy",authorized({user=words[2],mustChangePassword=true})))
+            elseif command == "approve" and words[2] == "request" and words[3] then
+                printResponse(context.network:request("auth.approval.request",authorized({action=table.concat(words," ",3)})))
+            elseif command == "approve" and words[2] then
+                printResponse(context.network:request("auth.approval.approve",authorized({id=words[2]})))
+            elseif command == "policies" then printResponse(context.network:request("policy.list",authorized()))
+            elseif command == "policy" and words[2] then printResponse(context.network:request("policy.apply",authorized({id=words[2],approval=words[3]})))
+            elseif command == "alarms" then printResponse(context.network:request("alarm.list",authorized()))
+            elseif command == "alarmx" and words[2] then printResponse(context.network:request("alarm.trigger",authorized({pattern=words[2],message=#words>2 and table.concat(words," ",3)or nil})))
+            elseif command == "drill" and words[2] then printResponse(context.network:request("alarm.drill",authorized({pattern=words[2],message=#words>2 and table.concat(words," ",3)or nil})))
+            elseif command == "devices" then printResponse(context.network:request("device.list",authorized()))
+            elseif command == "devname" and words[2] and words[3] then printResponse(context.network:request("device.rename",authorized({name=words[2],label=table.concat(words," ",3)})))
+            elseif command == "workflows" then printResponse(context.network:request("workflow.list",authorized()))
+            elseif command == "workflow" and words[2] then printResponse(context.network:request("workflow.start",authorized({id=words[2],owner=sessionUser})))
+            elseif command == "step" and words[2] then printResponse(context.network:request("workflow.advance",authorized({id=words[2]})))
+            elseif command == "notify" and words[2] and words[3] then printResponse(context.network:request("notify.send",authorized({severity=words[2],message=table.concat(words," ",3),channels={"monitor","chat"}})))
+            elseif command == "tasks" then printResponse(context.network:request("task.list",authorized()))
+            elseif command == "task" and words[2] and words[3] and words[4] then printResponse(context.network:request("task.set",authorized({id=words[2],owner=words[3],title=table.concat(words," ",4)})))
+            elseif command == "taskdone" and words[2] then printResponse(context.network:request("task.update",authorized({id=words[2],status="complete"})))
+            elseif command == "patrol" and words[2] and words[3] then printResponse(context.network:request("patrol.checkpoint",authorized({route=words[2],checkpoint=words[3]})))
+            elseif command == "sim" and words[2] == "start" then printResponse(context.network:request("simulation.start",authorized({name=#words>2 and table.concat(words," ",3)or"Exercise"})))
+            elseif command == "sim" and words[2] == "stop" then printResponse(context.network:request("simulation.stop",authorized({outcome=#words>2 and table.concat(words," ",3)or"completed"})))
+            elseif command == "sim" then printResponse(context.network:request("simulation.status",authorized()))
+            elseif command == "auditfind" and words[2] then printResponse(context.network:request("audit.query",authorized({query=table.concat(words," ",2),limit=100})))
+            elseif command == "auditverify" then printResponse(context.network:request("audit.verify",authorized()))
+            elseif command == "auditexport" then printResponse(context.network:request("audit.export",authorized({path=words[2]})))
+            elseif command == "extensions" then printResponse(context.network:request("extension.list",authorized()))
+            elseif command == "ext" and words[2] and words[3] then printResponse(context.network:request("extension.call",authorized({extension=words[2],action=words[3],data=#words>3 and table.concat(words," ",4)or nil})))
             elseif command == "routes" then
                 for node, route in pairs(context.network.routes) do
                     print(string.format("%s  %s  %s  %ds", node, route.mode, route.location, math.floor(os.clock() - route.seenAt)))
