@@ -33,7 +33,7 @@ local function printHelp()
     print("  sound [name]          Play a sound in a speaker zone")
     print("  alarm [count]         Trigger the speaker-zone alarm")
     print("  audiostop             Stop speaker playback")
-    print("  chat [#channel] <message>     Send through the chat gateway")
+    print("  chat [status] | chat [#channel] <message>  Send through the Chat Gateway")
     print("  announce <normal|urgent|emergency> <message>")
     print("  dashboard [monitor]  Operations overview")
     print("  incidents [status]   List incidents")
@@ -60,7 +60,7 @@ local function printHelp()
     print("  alarms | alarmx <pattern> [message] | drill <pattern>")
     print("  devices | devname <peripheral> <label>")
     print("  workflows | workflow <id> | step <run-id>")
-    print("  notify <severity> <message>")
+    print("  notify <info|notice|warning|critical|emergency> <message>")
     print("  tasks | task <id> <owner> <title> | taskdone <id>")
     print("  patrol <route> <checkpoint>")
     print("  sim <start|stop|status> [name]")
@@ -279,6 +279,8 @@ function service.register(context)
                 printResponse(context.network:request("audio.alarm", authorized({ count = tonumber(words[2]) or 3 })))
             elseif command == "audiostop" then
                 printResponse(context.network:request("audio.stop", authorized()))
+            elseif command == "chat" and words[2] == "status" then
+                printResponse(context.network:request("chat.status", authorized()))
             elseif command == "chat" and words[2] then
                 local channel, start = "global", 2
                 if words[2]:sub(1, 1) == "#" then channel, start = words[2]:sub(2), 3 end

@@ -3,7 +3,7 @@ local Canonical = require("cookieos.crypto.canonical")
 
 service.manifest = {
     name = "events", version = "3.3.0",
-    provides = { "events.publish", "events.subscribe", "events.unsubscribe", "events.topics", "events.recent" },
+    provides = { "events.publish", "events.subscribe", "events.unsubscribe", "events.topics", "events.recent", "notify.send" },
     depends = { "node" },
 }
 
@@ -116,6 +116,23 @@ function service.register(context)
         if not allowed then return nil, reason end
         if not validTopic(payload.topic) then return nil, "Invalid event topic" end
         return { topic = payload.topic, events = topics[payload.topic] or {} }
+    end)
+
+    context.network:provide("notify.send", function(payload, packet)
+        local allowed, reason = context.authorize(payload, packet, "notifications.send")
+        if not allowed then return nil, reason end
+        local message = tostring(payload.message or "")
+        if message == "" then return nil, "Notification message is required" end
+        if #message > 240 then return nil, "Notification must be 1-240 characters" end
+        local severity = tostring(payload.severity or "info"):lower()
+        if not severity:match("^(info|notice|warning|critical|emergency)$") then
+            return nil, "Severity must be info, notice, warning, critical, or emergency"
+        end
+        local event, eventError = publish("notification." .. severity, {
+            message = message, severity = severity, channels = payload.channels or { "monitor" }, source = packet.source,
+        }, { source = packet.source, retain = false })
+        if not event then return nil, eventError end
+        return { sent = true, event = event.id, severity = severity, message = message }
     end)
 
     publish("node.started", { node = context.config.node, mode = context.config.mode })
