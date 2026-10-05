@@ -30,10 +30,39 @@ local function printHelp()
     print("  revoke <node>         Revoke a paired node")
 end
 
+local function friendlyError(message)
+    message = tostring(message or "Request failed")
+    if message == "Untrusted or missing actor identity" then
+        return "Authentication required. Run 'login [user]' first, then retry the command. Pair this node first if it cannot reach the authority."
+    end
+    if message:find("expired session", 1, true) or message == "Invalid session" then
+        return "Your login session expired. Run 'login [user]' again."
+    end
+    return message
+end
+
 local function printResponse(response, err)
-    if not response then printError(err or "No response"); return end
-    if not response.ok then printError(response.error or "Request failed"); return end
+    if not response then printError(friendlyError(err or "No response")); return end
+    if not response.ok then printError(friendlyError(response.error)); return end
     print(textutils.serialize(response.data, { compact = true }))
+end
+
+local function printHelpOnMonitor()
+    local monitor = peripheral.find("monitor")
+    if not monitor then printError("No attached monitor was found."); return end
+    local previous = term.current()
+    local ok, err = pcall(function()
+        monitor.setTextScale(0.5)
+        term.redirect(monitor)
+        term.setBackgroundColor(colors.black)
+        term.setTextColor(colors.white)
+        term.clear()
+        term.setCursorPos(1, 1)
+        printHelp()
+    end)
+    term.redirect(previous)
+    if not ok then printError("Could not display help on monitor: " .. tostring(err)); return end
+    print("Help displayed on attached monitor.")
 end
 
 function service.register(context)
@@ -54,7 +83,8 @@ function service.register(context)
 
     context.supervisor:add("terminal", function()
         print("CookieOS v3 terminal on " .. context.config.node)
-        printHelp()
+        print("Type 'help' for commands or 'help monitor' to display them on an attached monitor.")
+        print("Run 'login [user]' before using protected commands.")
 
         while true do
             term.setTextColor(colors.yellow)
@@ -66,7 +96,7 @@ function service.register(context)
             local command = tostring(words[1] or ""):lower()
 
             if command == "help" then
-                printHelp()
+                if tostring(words[2] or ""):lower() == "monitor" then printHelpOnMonitor() else printHelp() end
             elseif command == "login" then
                 local username = words[2] or context.config.identity.user
                 if not username then
@@ -128,8 +158,8 @@ function service.register(context)
                 printResponse(context.network:request("events.topics", authorized()))
             elseif command == "paircode" then
                 local response, err = context.network:request("pairing.begin", authorized())
-                if not response then printError(err or "No response")
-                elseif not response.ok then printError(response.error or "Request failed")
+                if not response then printError(friendlyError(err or "No response"))
+                elseif not response.ok then printError(friendlyError(response.error))
                 else
                     print("Authority-generated pairing code:")
                     print("  " .. tostring(response.data.code))
