@@ -70,7 +70,7 @@ required.
 From the repository:
 
 ```text
-node tools/build-release.mjs 3.4.0 PrinceOfCookies/CookieOS cookieos-v3-rewrite RELEASE_KEY
+node tools/build-release.mjs 3.6.0 PrinceOfCookies/CookieOS cookieos-v3-rewrite RELEASE_KEY
 ```
 
 The builder creates `dist/release` with the online/offline package tree, hashes,

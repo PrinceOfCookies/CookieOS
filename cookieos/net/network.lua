@@ -138,8 +138,8 @@ function Network:invoke(service, payload, packet)
     return result, serviceError
 end
 
-function Network:request(service, payload, timeout)
-    if self.services[service] then
+function Network:requestTo(destination, service, payload, timeout)
+    if self.services[service] and (destination == nil or destination == self.config.node) then
         local result, serviceError = self:invoke(service, payload, {
             source = self.config.node, service = service, kind = "request", localRequest = true,
         })
@@ -147,7 +147,8 @@ function Network:request(service, payload, timeout)
         return { ok = true, data = result }
     end
 
-    local destination = self:resolve(service)
+    local targeted = destination ~= nil
+    destination = destination or self:resolve(service)
     local attempts = self.config.network.requestRetries + 1
     for _ = 1, attempts do
         local id = self:send("request", {
@@ -170,10 +171,14 @@ function Network:request(service, payload, timeout)
         end
         if destination and self.routes[destination] then
             self.routes[destination].failures = (self.routes[destination].failures or 0) + 1
-            destination = self:resolve(service)
+            if not targeted then destination = self:resolve(service) end
         end
     end
     return nil, "Request timed out after " .. attempts .. " attempt(s): " .. service
+end
+
+function Network:request(service, payload, timeout)
+    return self:requestTo(nil, service, payload, timeout)
 end
 
 function Network:prune()

@@ -39,7 +39,17 @@ function service.register(context)
         return state()
     end)
 
-    context.security = { get = function() return level end }
+    context.security = {
+        get = function() return level end,
+        setInternal = function(requested, source)
+            requested = tostring(requested or ""):upper()
+            if not valid[requested] then return nil, "Invalid security level" end
+            level = requested
+            context.publish("security.changed", { level = level, actor = source or "internal" })
+            context.network:emit("security.changed", state())
+            return state()
+        end,
+    }
 end
 
 return service

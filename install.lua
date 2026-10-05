@@ -138,6 +138,7 @@ local function decodeBase64(value)
     output[#output+1]=string.char(math.floor(combined/65536)%256)
     if c~="="then output[#output+1]=string.char(math.floor(combined/256)%256)end
     if d~="="then output[#output+1]=string.char(combined%256)end
+    if offset%32768==1 and os.queueEvent and os.pullEvent then os.queueEvent("cookieos_installer_yield");os.pullEvent("cookieos_installer_yield")end
   end;return table.concat(output)
 end
 local function fetchGitHubFile(path,ref,repository)
@@ -168,14 +169,15 @@ local function detect()
   return found
 end
 local presets={
-  {name="Auth terminal",mode="client",services={"node","terminal"}},
-  {name="Command Authority",mode="server",services={"node","command-authority","command-terminal"},requires={"speaker","playerDetector"}},
-  {name="Auth/core server",mode="server",services={"node","auth","audit","events","personnel","security","maintenance","terminal"}},
-  {name="Player tracker",mode="server",services={"node","player-tracker","maintenance"},requires="player_detector"},
-  {name="Speaker zone",mode="server",services={"node","audio","maintenance"},requires="speaker"},
-  {name="Chat gateway",mode="server",services={"node","chat","maintenance"},requires="chatBox"},
-  {name="Relay",mode="relay",services={"node"}},
-  {name="Hybrid core + relay",mode="hybrid",services={"node","auth","audit","events","personnel","security","maintenance","terminal"}},
+  {name="Auth terminal",mode="client",services={"node","fleet-agent","terminal"}},
+  {name="Command Authority",mode="server",services={"node","fleet-agent","command-authority","command-terminal"},requires={"speaker","playerDetector"}},
+  {name="Auth/core server",mode="server",services={"node","fleet-agent","auth","audit","events","personnel","security","maintenance","operations","terminal"}},
+  {name="Player tracker",mode="server",services={"node","fleet-agent","player-tracker","maintenance"},requires="player_detector"},
+  {name="Speaker zone",mode="server",services={"node","fleet-agent","audio","maintenance"},requires="speaker"},
+  {name="Chat gateway",mode="server",services={"node","fleet-agent","chat","maintenance"},requires="chatBox"},
+  {name="Access controller",mode="server",services={"node","fleet-agent","operations","maintenance"}},
+  {name="Relay",mode="relay",services={"node","fleet-agent"}},
+  {name="Hybrid core + relay",mode="hybrid",services={"node","fleet-agent","auth","audit","events","personnel","security","maintenance","operations","terminal"}},
   {name="Custom node",mode="client",services={"node"}},
 }
 local function randomKey(node)return sha256(node..":"..os.epoch("utc")..":"..math.random()..":"..math.random())end
@@ -205,6 +207,7 @@ local function wizard(roleName,existing)
   end
   local isAuthority=selected.name=="Auth/core server"or selected.name=="Hybrid core + relay"
   local isCommand=selected.name=="Command Authority"
+  local isAccess=selected.name=="Access controller"
   if isCommand then
     local user=ask("CL6 Minecraft username")
     local password,override="",""
@@ -227,6 +230,10 @@ local function wizard(roleName,existing)
     end
     config.commandAuthority={authority=true,user=user,radius=tonumber(ask("Physical access radius","6"))or 6,
       position=position,credential=credential(password,"normal"),overrideCredential=credential(override,"override")}
+    local peers=ask("Backup Command Authority nodes (comma separated, optional)","")
+    config.commandCluster={peers={},quorum=1,priority=tonumber(ask("Authority priority (higher wins)","100"))or 100}
+    for peer in peers:gmatch("[^,%s]+")do table.insert(config.commandCluster.peers,peer)end
+    if #config.commandCluster.peers>0 then config.commandCluster.quorum=tonumber(ask("Required authority quorum","1"))or 1 end
   elseif isAuthority then
     if not config.auth then
       local admin=ask("Initial administrator","admin")
@@ -234,10 +241,21 @@ local function wizard(roleName,existing)
       config.auth={seedUsers={[admin]={clearance=5,role="Administrator",status="Active",extraPermissions={"all"},password=password}},delegates={}}
     end
     config.events=config.events or{publishers={}}
-    config.commandAuthority=config.commandAuthority or{required=true,node=ask("Command Authority node name","cookiesecurity-command")}
+    config.commandAuthority=config.commandAuthority or{required=true,node=ask("Primary Command Authority node name","cookiesecurity-command")}
+    local peers=ask("Backup Command Authority nodes (comma separated, optional)","");config.commandAuthority.peers={}
+    for peer in peers:gmatch("[^,%s]+")do table.insert(config.commandAuthority.peers,peer)end
+    if #config.commandAuthority.peers>0 then config.commandAuthority.quorum=tonumber(ask("Required authority quorum","1"))or 1 end
   else
     config.identity.user=ask("Default username (login can override)","admin")
-    config.commandAuthority=config.commandAuthority or{required=true,node=ask("Command Authority node name","cookiesecurity-command")}
+    config.commandAuthority=config.commandAuthority or{required=true,node=ask("Primary Command Authority node name","cookiesecurity-command")}
+  end
+  if isAccess then
+    config.operations={doors={}}
+    print("Configure redstone doors. Leave the door id blank when finished.")
+    while true do
+      local id=ask("Door id","");if id==""then break end
+      table.insert(config.operations.doors,{id=id,zone=ask("Door zone","default"),side=ask("Redstone side","back"),clearance=tonumber(ask("Required clearance 0-5","1"))or 1,locked=true})
+    end
   end
   if found.monitor and isAuthority and yes("Enable personnel monitor display?",false)then
     table.insert(config.services,"personnel-display");config.personnelDisplay={side=found.monitor[1],textScale=0.5}
@@ -301,6 +319,7 @@ local function stage(manifest,fetch)
     local contents,err=fetch(file);if not contents then error("Download failed: "..tostring(err))end
     if sha256(contents)~=file.sha256 then error("Hash mismatch: "..file.path)end
     writeFile(fs.combine(stage,file.path:sub(2)),contents);print("ok")
+    if os.queueEvent and os.pullEvent then os.queueEvent("cookieos_installer_yield");os.pullEvent("cookieos_installer_yield")end
   end
 end
 local function apply(manifest)
@@ -361,6 +380,7 @@ if flag("--reconfigure")then
   saveConfig(config)
   if config.commandAuthority and config.commandAuthority.required then
     print("Command Authority enrollment is required before this node can boot.");runProgram("/pair-node.lua")
+    for _,peer in ipairs(config.commandAuthority.peers or{})do print("Now generate a code on backup authority "..peer..".");runProgram("/pair-node.lua","/cookieos-node.lua",config.transports[1].side,peer)end
   end
   print("Configuration updated. Reboot to apply.");return
 end
@@ -370,5 +390,6 @@ print("Installing CookieOS "..manifest.version);stage(manifest,fetch);apply(mani
 print("Installation complete for node "..config.node..".")
 if config.commandAuthority and config.commandAuthority.required then
   print("Command Authority enrollment is required before this node can boot.");runProgram("/pair-node.lua")
+  for _,peer in ipairs(config.commandAuthority.peers or{})do print("Now generate a code on backup authority "..peer..".");runProgram("/pair-node.lua","/cookieos-node.lua",config.transports[1].side,peer)end
 end
 if yes("Reboot now?",true)then os.reboot()end

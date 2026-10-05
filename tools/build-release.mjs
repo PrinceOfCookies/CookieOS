@@ -83,12 +83,6 @@ writeFileSync(join(output, "manifest.json"), manifestJson);
 const installer = readFileSync(join(root, "install.lua"), "utf8").replace(
   'local EMBEDDED_RELEASE_KEY = "COOKIEOS_RELEASE_KEY_NOT_CONFIGURED"',
   `local EMBEDDED_RELEASE_KEY = ${JSON.stringify(signingKey)}`,
-).replace(
-  "local EMBEDDED_MANIFEST = nil",
-  `local EMBEDDED_MANIFEST = ${JSON.stringify(Buffer.from(manifestJson).toString("base64"))}`,
-).replace(
-  "local EMBEDDED_BUNDLE = nil",
-  `local EMBEDDED_BUNDLE = ${JSON.stringify(Buffer.from(bundleJson).toString("base64"))}`,
 );
 writeFileSync(join(output, "install.lua"), installer);
 console.log(`Built CookieOS ${version}: ${files.length} files in ${output}`);

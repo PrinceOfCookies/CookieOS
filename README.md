@@ -6,16 +6,14 @@
 Use the single guided `install.lua` for fresh installs, upgrades, repairs,
 reconfiguration, offline disks, recovery, and uninstall. See the
 [complete setup guide](docs/setup-guide.md) or the
-[installer reference](docs/installation.md).
+[installer reference](docs/installation.md). The dashboard, incidents, access control,
+map editor, redundancy, and fleet updater are covered in the
+[CookieSecurity operations guide](docs/operations-guide.md).
 
-Because the GitHub API returns base64 JSON, download and decode the installer once:
-
-```lua
-lua
-local r=assert(http.get("https://api.github.com/repos/PrinceOfCookies/CookieOS/contents/release/install.lua?ref=cookieos-v3-rewrite",{["User-Agent"]="CookieOS"}));local j=textutils.unserializeJSON(r.readAll());r.close();local o=fs.open("install.lua","w");o.write(textutils.decodeBase64(j.content:gsub("%s","")));o.close()
-exit()
-install.lua
-```
+Drag `release/install.lua` onto the CC:Tweaked computer and run `install.lua`.
+The bootstrap is intentionally small, supports CC versions without
+`textutils.decodeBase64`, and retrieves the signed release in two GitHub API calls.
+It yields during large decode and verification work to avoid the CC watchdog.
 
 ## Original CookieOS and the v3 rewrite
 
