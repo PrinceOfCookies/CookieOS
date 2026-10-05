@@ -34,7 +34,10 @@ local function shaRaw(message)
   for shift = 24, 0, -8 do table.insert(bytes, band(rshift(high, shift), 0xff)) end
   for shift = 24, 0, -8 do table.insert(bytes, band(rshift(low, shift), 0xff)) end
   local h = {0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19}
+  local blockCount=0
   for offset = 1, #bytes, 64 do
+    blockCount=blockCount+1
+    if blockCount%8==0 and os.queueEvent and os.pullEvent then os.queueEvent("cookieos_sha256_yield");os.pullEvent("cookieos_sha256_yield") end
     local w = {}
     for index = 0, 15 do
       local at = offset + index * 4
