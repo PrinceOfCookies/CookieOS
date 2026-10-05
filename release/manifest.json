@@ -1,5 +1,5 @@
 {
-  "version": "3.7.1-dev.42d60d5",
+  "version": "3.7.1-dev.ef480a8",
   "repository": "PrinceOfCookies/CookieOS",
   "ref": "cookieos-v3-rewrite",
   "bundle": "release/bundle.json",
@@ -212,7 +212,7 @@
     {
       "path": "/programReplacements/enroll.lua",
       "source": "release/packages/programReplacements/enroll.lua",
-      "sha256": "a45f94e38b690333fea892ea27f3a5cba8262d6a09ead8f895781df961e30104"
+      "sha256": "c36388b7bd8db383e9a15728b343087931a38a39cee9cea415e9d1ff13f621c0"
     },
     {
       "path": "/programReplacements/list.lua",
@@ -272,7 +272,7 @@
     {
       "path": "/startup-v3.lua",
       "source": "release/packages/startup-v3.lua",
-      "sha256": "eea2e45c262c07902cb2a22328932cd81b90003663c3442c8e40660bc5541068"
+      "sha256": "12e2c2ea806dbfbf6a9fc2869b7ee1cf2f8e574d5d078d7faee3215e0c925bb8"
     }
   ],
   "remove": [
@@ -283,5 +283,5 @@
     "/os/programs/PlayMusic",
     "/programReplacements/shell.lua"
   ],
-  "signature": "3d80a8456d6ac54fe2af3ae898a4ee55324a4d8b9c58ef330bc79640c61e34f6"
+  "signature": "07748f65c7d461733571da4d76bb2d668c92bb2aff73621363039d03d51dba55"
 }
