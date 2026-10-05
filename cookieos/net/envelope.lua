@@ -10,19 +10,20 @@ end
 
 function envelope.new(node, kind, fields)
     fields = fields or {}
-    return {
+    local packet = {
         cookieos = 3,
         id = fields.id or nextId(node),
         kind = kind,
         source = node,
         destination = fields.destination,
-        nextHop = fields.nextHop,
         service = fields.service,
         replyTo = fields.replyTo,
         ttl = fields.ttl,
         sentAt = os.epoch("utc"),
         payload = fields.payload,
     }
+    if fields.nextHop then packet.nextHop = fields.nextHop end
+    return packet
 end
 
 function envelope.valid(packet)
