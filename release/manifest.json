@@ -1,5 +1,5 @@
 {
-  "version": "3.7.1-dev-cleanup",
+  "version": "3.7.1-dev.382c991",
   "repository": "PrinceOfCookies/CookieOS",
   "ref": "cookieos-v3-rewrite",
   "bundle": "release/bundle.json",
@@ -283,5 +283,5 @@
     "/os/programs/PlayMusic",
     "/programReplacements/shell.lua"
   ],
-  "signature": "a0e6711d12135685ac132ed3ebd233f78c1053664b2f78fc97b10b4db2a709f1"
+  "signature": "8a3b71b464922e50cf01827c674f49d0c8f941a803f0cb33e23bcad563779377"
 }
