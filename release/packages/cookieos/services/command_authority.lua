@@ -62,7 +62,7 @@ function service.register(context)
     end
 
     local function diagnostic(username)
-        local details = { username = username, detector = "unknown", gps = "unknown", configuredPosition = options.position }
+        local details = { username = username, detector = "unknown", gps = "unknown", configuredPosition = options.position, playerLookups = {} }
         if peripheral.getName and peripheral.getMethods then
             local ok, name = pcall(peripheral.getName, detector)
             if not ok then name = nil end
@@ -83,15 +83,19 @@ function service.register(context)
         if username and detector.getPlayerPos then
             local ok, player = pcall(detector.getPlayerPos, username)
             if ok and type(player) == "table" then details.player = player else details.playerError = tostring(player) end
+            details.playerLookups[#details.playerLookups + 1] = tostring(username) .. "=" .. (ok and type(player) or "error")
         end
         return details
     end
 
     local function diagnosticText(details)
         if options.debug == false then return "" end
-        local parts = { "[Command debug] detector=" .. tostring(details.detector), "gps=" .. (type(details.gps) == "table" and (details.gps.x .. "," .. details.gps.y .. "," .. details.gps.z) or tostring(details.gps)) }
+        local configured = details.configuredPosition
+        local configuredText = type(configured) == "table" and (tostring(configured.x) .. "," .. tostring(configured.y) .. "," .. tostring(configured.z)) or "none"
+        local parts = { "[Command debug] detector=" .. tostring(details.detector), "gps=" .. (type(details.gps) == "table" and (details.gps.x .. "," .. details.gps.y .. "," .. details.gps.z) or tostring(details.gps)), "computer=" .. configuredText }
         if details.player then parts[#parts + 1] = "player=" .. tostring(details.player.x) .. "," .. tostring(details.player.y) .. "," .. tostring(details.player.z) .. " dimension=" .. tostring(details.player.dimension or "unknown") end
         if details.playerError then parts[#parts + 1] = "player lookup=" .. details.playerError end
+        if details.playerLookups and #details.playerLookups > 0 then parts[#parts + 1] = "lookups=" .. table.concat(details.playerLookups, ",") end
         if details.onlinePlayers then
             local names = {}
             for _, name in ipairs(details.onlinePlayers) do names[#names + 1] = tostring(name) end
@@ -116,13 +120,22 @@ function service.register(context)
         local lookupName = username
         local ok, player = pcall(detector.getPlayerPos, lookupName)
         if (not ok or type(player) ~= "table") and type(details.onlinePlayers) == "table" then
-            for _, candidate in ipairs(details.onlinePlayers) do
-                if tostring(candidate):lower() == tostring(username):lower() then lookupName = candidate; ok, player = pcall(detector.getPlayerPos, candidate); break end
+            local candidates = {}
+            for _, candidate in ipairs(details.onlinePlayers) do candidates[#candidates + 1] = candidate end
+            if #candidates == 0 then for _, candidate in pairs(details.onlinePlayers) do candidates[#candidates + 1] = candidate end end
+            for _, candidate in ipairs(candidates) do
+                if tostring(candidate):lower() == tostring(username):lower() then
+                    lookupName = candidate; ok, player = pcall(detector.getPlayerPos, candidate)
+                    details.playerLookups[#details.playerLookups + 1] = tostring(candidate) .. "=" .. (ok and type(player) or "error")
+                    break
+                end
             end
         end
-        if not ok or type(player) ~= "table" then return nil, "Configured CL6 player is not visible to the detector. " .. diagnosticText(details), details end
+        if not ok or type(player) ~= "table" then return nil, "Configured CL6 player is listed but its coordinates could not be read from the detector. " .. diagnosticText(details), details end
         details.player = player
-        local distance = math.sqrt((player.x - x)^2 + (player.y - y)^2 + (player.z - z)^2)
+        local px, py, pz = tonumber(player.x), tonumber(player.y), tonumber(player.z)
+        if not px or not py or not pz then return nil, "Detector returned no usable player coordinates. " .. diagnosticText(details), details end
+        local distance = math.sqrt((px - x)^2 + (py - y)^2 + (pz - z)^2)
         if distance > (tonumber(options.radius) or 6) then return nil, string.format("CL6 player is %.1f blocks away (radius %.1f). %s", distance, tonumber(options.radius) or 6, diagnosticText(details)), details end
         return true, distance, details
     end
