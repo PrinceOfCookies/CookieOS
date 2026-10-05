@@ -16,6 +16,7 @@ function Network.new(config, log)
         log = log,
         transports = {},
         handlers = {},
+        observers = {},
         services = {},
         routes = {},
         seen = {},
@@ -54,6 +55,11 @@ end
 function Network:on(kind, handler)
     self.handlers[kind] = self.handlers[kind] or {}
     table.insert(self.handlers[kind], handler)
+end
+
+function Network:observe(kind, handler)
+    self.observers[kind] = self.observers[kind] or {}
+    table.insert(self.observers[kind], handler)
 end
 
 function Network:provide(service, handler)
@@ -221,6 +227,10 @@ function Network:allowRequest(source)
 end
 
 function Network:dispatch(packet)
+    for _, observer in ipairs(self.observers[packet.kind] or {}) do
+        local ok, err = pcall(observer, packet)
+        if not ok then self.log.error("Network observer failed: " .. tostring(err)) end
+    end
     if packet.kind == "discovery" then
         if not self.routes[packet.source] and countEntries(self.routes) >= self.config.network.maxRoutes then
             removeOldest(self.routes, "seenAt")
